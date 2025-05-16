@@ -1,0 +1,29 @@
+// src/core/core.module.ts
+import { Module } from '@nestjs/common';
+
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { DatabaseModule } from './db/database.module';
+import { EmailModule } from './email/email.module';
+import { GoogleModule } from './google/google.module';
+import { RefreshTokenNoncesModule } from './refresh-token-nonces/refresh-token-nonces.module';
+import { JobsModule } from './jobs/jobs.module';
+import { JwtModule } from './jwt/jwt.module';
+import { HashingModule } from './hashing/hashing.module';
+
+@Module({
+    imports: [
+        AuthModule,
+        DatabaseModule,
+        EmailModule,
+        // FilesModule,
+        // FileUploadModule,
+        HashingModule,
+        GoogleModule,
+        JobsModule,
+        JwtModule,
+        RefreshTokenNoncesModule,
+        UsersModule,
+    ],
+})
+export class CoreModule { }
