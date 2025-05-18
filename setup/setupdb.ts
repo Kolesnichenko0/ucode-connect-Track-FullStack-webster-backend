@@ -1,7 +1,7 @@
-// src/setup/setupdb.ts
+// setup/setupdb.ts
 import { createConnection, Connection } from 'mysql2/promise';
-import getDatabaseRootConfig from '../config/configs/special/database.root.config';
-import getDatabaseConfig from '../config/configs/database.config';
+import getDatabaseRootConfig from './config/database.root.config';
+import getDatabaseConfig from '../src/config/configs/database.config';
 import * as dotenv from 'dotenv';
 import * as dotenvExpand from 'dotenv-expand';
 import * as fs from 'fs';
