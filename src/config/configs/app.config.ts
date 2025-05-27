@@ -68,6 +68,8 @@ const getAppConfig = () => {
           logos: path.join(basePublicAssetsPath, 'images', 'logos'),
           avatars: path.join(basePublicAssetsPath, 'images', 'avatars'),
           fonts: path.join(basePublicAssetsPath, 'fonts'),
+          //http://localhost:8080/public/static/avatars/
+          //./public/static/avatars/...
         }
       },
       logo: {

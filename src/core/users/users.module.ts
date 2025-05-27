@@ -8,9 +8,12 @@ import { AccountOwnerGuard } from './guards/account-owner.guard';
 import { EmailModule } from '../email/email.module';
 import { AuthModule } from '../auth/auth.module';
 import { HashingModule } from '../hashing/hashing.module';
+import { FileUploadService } from '../file-upload/file-upload.service';
+import { FileUploadModule } from '../file-upload';
+import { FilesModule } from '../files/files.module';
 
 @Module({
-    imports: [EmailModule, forwardRef(() => AuthModule), HashingModule],
+    imports: [EmailModule, forwardRef(() => AuthModule), HashingModule, FileUploadModule, FilesModule],
     controllers: [UsersController],
     providers: [
         UsersService,

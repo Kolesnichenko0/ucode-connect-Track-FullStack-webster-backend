@@ -19,9 +19,13 @@ const getStorageConfig = () => {
       paths: {
         base: baseStoragePath,
         baseUploads: baseUploadsPath,
-        // uploads: {
-        //   avatars: path.join(baseUploadsPath, 'avatars'),
-        // }
+        uploads: {
+          userAvatars: path.join(baseUploadsPath, 'user_avatars'),
+          projectAssets: path.join(baseUploadsPath, 'project_assets'),
+          projectPreviews: path.join(baseUploadsPath, 'project_previews'),
+          fontAssets: path.join(baseUploadsPath, 'font_assets'),
+          others: path.join(baseUploadsPath, 'others'),
+        }
       }
     },
   };

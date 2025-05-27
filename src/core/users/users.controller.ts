@@ -7,6 +7,11 @@ import {
     UseGuards,
     Get,
     HttpStatus,
+    Post,
+    UseInterceptors,
+    UploadedFile,
+    ParseFilePipeBuilder,
+    Req,
 } from '@nestjs/common';
 import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -16,12 +21,21 @@ import { UserId } from '../../common/decorators';
 import { UpdateUserPasswordDto } from './dto/update-user-password.dto';
 import {
     ApiBody,
+    ApiConsumes,
     ApiOperation,
     ApiParam,
     ApiResponse,
     ApiTags,
     OmitType,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { 
+    UploadFileTypeValidator, 
+    UploadFileSizeValidator,
+    UPLOAD_ALLOWED_FILE_MIME_TYPES,
+    UPLOAD_ALLOWED_MAX_FILE_SIZES,
+    UPLOAD_ALLOWED_FILE_EXTENSIONS 
+  } from '../../core/file-upload';
 
 @Controller('users')
 @ApiTags('Users')
@@ -286,132 +300,132 @@ export class UsersController {
         return this.usersService.updatePassword(id, dto);
     }
 
-    // @Post(':id/upload-avatar')
-    // @UseGuards(AccountOwnerGuard)
-    // @UseInterceptors(
-    //     createFileUploadInterceptor({
-    //         destination: './public/uploads/user-avatars',
-    //         allowedTypes: AvatarConfig.prototype.allowedTypesForInterceptor,
-    //         maxSize: 5 * 1024 * 1024,
-    //     }),
-    // )
-    // @ApiOperation({ summary: 'Upload user profile picture' })
-    // @ApiConsumes('multipart/form-data')
-    // @ApiParam({
-    //     required: true,
-    //     name: 'id',
-    //     type: 'number',
-    //     description: 'User identifier',
-    //     example: 1,
-    // })
-    // @ApiBody({
-    //     required: true,
-    //     schema: {
-    //         type: 'object',
-    //         properties: {
-    //             file: {
-    //                 type: 'string',
-    //                 format: 'binary',
-    //                 description:
-    //                     'Avatar image file (e.g., PNG, JPEG). Example: "avatar.png" (max size: 5MB)',
-    //             },
-    //         },
-    //     },
-    // })
-    // @ApiResponse({
-    //     status: HttpStatus.OK,
-    //     description: 'Avatar successfully uploaded',
-    //     schema: {
-    //         type: 'object',
-    //         properties: {
-    //             server_filename: {
-    //                 type: 'string',
-    //                 description: 'Filename for the uploaded avatar',
-    //                 example: 'avatar.png',
-    //             },
-    //         },
-    //     },
-    // })
-    // @ApiResponse({
-    //     status: HttpStatus.BAD_REQUEST,
-    //     description: 'Validation error',
-    //     schema: {
-    //         type: 'object',
-    //         properties: {
-    //             message: {
-    //                 type: 'string',
-    //                 example: 'Only allowed file types are accepted!',
-    //             },
-    //             error: {
-    //                 type: 'string',
-    //                 description: 'Error message',
-    //                 example: 'Bad Request',
-    //             },
-    //             statusCode: {
-    //                 type: 'number',
-    //                 description: 'Error code',
-    //                 example: 400,
-    //             },
-    //         },
-    //     },
-    // })
-    // @ApiResponse({
-    //     status: HttpStatus.UNAUTHORIZED,
-    //     description: 'Unauthorized access',
-    //     schema: {
-    //         type: 'object',
-    //         properties: {
-    //             message: {
-    //                 type: 'string',
-    //                 description: 'Error message',
-    //                 example: 'Unauthorized',
-    //             },
-    //             statusCode: {
-    //                 type: 'number',
-    //                 description: 'Error code',
-    //                 example: 401,
-    //             },
-    //         },
-    //     },
-    // })
-    // @ApiResponse({
-    //     status: HttpStatus.FORBIDDEN,
-    //     description: 'Forbidden access',
-    //     schema: {
-    //         type: 'object',
-    //         properties: {
-    //             message: {
-    //                 type: 'string',
-    //                 description: 'Error message',
-    //                 example: 'You can only access your own account',
-    //             },
-    //             error: {
-    //                 type: 'string',
-    //                 description: 'Error message',
-    //                 example: 'Forbidden',
-    //             },
-    //             statusCode: {
-    //                 type: 'number',
-    //                 description: 'Error code',
-    //                 example: 403,
-    //             },
-    //         },
-    //     },
-    // })
-    // async uploadAvatar(
-    //     @UploadedFile() file: Express.Multer.File,
-    //     @Param('id') id: number,
-    // ): Promise<{ server_filename: string }> {
-    //     //TODO: add verification of file type. in case of error - throw BadRequestException
-    //     //TODO: (not now) Delete old pictures (that a person just uploaded) do in Scheduler
-    //     if (!file) {
-    //         throw new BadRequestException(
-    //             'Invalid file format or missing file',
-    //         );
-    //     }
-    //
-    //     this.usersService.updateUserAvatar(id, file.filename);
-    //
-    //     return { server_filename: file.filename };
-    // }
+    @Post(':id/upload-avatar')
+    @UseGuards(AccountOwnerGuard)
+    @UseInterceptors(FileInterceptor('avatar'))
+    @ApiOperation({ summary: 'Upload user profile picture' })
+    @ApiConsumes('multipart/form-data')
+    @ApiParam({
+        required: true,
+        name: 'id',
+        type: 'number',
+        description: 'User identifier',
+        example: 1,
+    })
+    @ApiBody({
+        required: true,
+        schema: {
+            type: 'object',
+            properties: {
+                file: {
+                    type: 'string',
+                    format: 'binary',
+                    description:
+                        'Avatar image file (e.g., PNG, JPEG). Example: "avatar.png" (max size: 5MB)',
+                },
+            },
+        },
+    })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: 'Avatar successfully uploaded',
+        schema: {
+            type: 'object',
+            properties: {
+                server_filename: {
+                    type: 'string',
+                    description: 'Filename for the uploaded avatar',
+                    example: 'avatar.png',
+                },
+                fileKey: {
+                    type: 'string',
+                    description: 'Unique file key for the uploaded avatar',
+                    example: 'a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6',
+                },
+            },
+        },
+    })
+    @ApiResponse({
+        status: HttpStatus.BAD_REQUEST,
+        description: 'Validation error',
+        schema: {
+            type: 'object',
+            properties: {
+                message: {
+                    type: 'string',
+                    example: 'Only allowed file types are accepted!',
+                },
+                error: {
+                    type: 'string',
+                    description: 'Error message',
+                    example: 'Bad Request',
+                },
+                statusCode: {
+                    type: 'number',
+                    description: 'Error code',
+                    example: 400,
+                },
+            },
+        },
+    })
+    @ApiResponse({
+        status: HttpStatus.UNAUTHORIZED,
+        description: 'Unauthorized access',
+        schema: {
+            type: 'object',
+            properties: {
+                message: {
+                    type: 'string',
+                    description: 'Error message',
+                    example: 'Unauthorized',
+                },
+                statusCode: {
+                    type: 'number',
+                    description: 'Error code',
+                    example: 401,
+                },
+            },
+        },
+    })
+    @ApiResponse({
+        status: HttpStatus.FORBIDDEN,
+        description: 'Forbidden access',
+        schema: {
+            type: 'object',
+            properties: {
+                message: {
+                    type: 'string',
+                    description: 'Error message',
+                    example: 'You can only access your own account',
+                },
+                error: {
+                    type: 'string',
+                    description: 'Error message',
+                    example: 'Forbidden',
+                },
+                statusCode: {
+                    type: 'number',
+                    description: 'Error code',
+                    example: 403,
+                },
+            },
+        },
+    })
+    async uploadAvatar(
+        @UploadedFile(
+            new ParseFilePipeBuilder()
+                .addValidator(
+                    new UploadFileTypeValidator({allowedMimeTypes: [...UPLOAD_ALLOWED_FILE_MIME_TYPES.USER_AVATAR], allowedExtentions: [...UPLOAD_ALLOWED_FILE_EXTENSIONS.USER_AVATAR]}),
+                )
+                .addValidator(
+                    new UploadFileSizeValidator({maxSize: UPLOAD_ALLOWED_MAX_FILE_SIZES.USER_AVATAR})
+                )
+                .build(),
+        ) file: Express.Multer.File,
+        @Param('id') id: number,
+        @UserId() authorId: number,
+        @Req() req: Request,
+    ): Promise<User> {
+        return this.usersService.updateUserAvatar(id, file);
+    }
 }

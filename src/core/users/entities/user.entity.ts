@@ -13,6 +13,7 @@ export const SERIALIZATION_GROUPS = {
 };
 
 export class User implements PrismaUser {
+   
     @Expose({ groups: ['basic'] })
     @ApiProperty({
         description: 'User identifier',
@@ -23,7 +24,7 @@ export class User implements PrismaUser {
     id: number;
 
     @Expose({ groups: ['private'] })
-    password: string;
+    password: string | null;
 
     @Expose({ groups: ['basic'] })
     @ApiProperty({
@@ -52,14 +53,14 @@ export class User implements PrismaUser {
     })
     email: string;
 
-    // @Expose({ groups: ['basic'] })
-    // @ApiProperty({
-    //     description: 'Profile picture',
-    //     nullable: false,
-    //     type: 'string',
-    //     example: 'ann-nichols-avatar.png',
-    // })
-    // profilePictureName: string;
+    @Expose({ groups: ['basic'] })
+    @ApiProperty({
+        description: 'Profile file ID',
+        nullable: false,
+        type: 'number',
+        example: 1,
+    })
+    avatarFileId: number;
 
     @Expose({ groups: ['private'] })
     isEmailVerified: boolean;
@@ -78,6 +79,9 @@ export class User implements PrismaUser {
 
     @Expose({ groups: ['private'] })
     refreshTokenNonces?: PrismaRefreshTokenNonce[];
+
+    @Expose({ groups: ['basic'] })//TODO: Тут нужно может трансформом задавать url?!
+    avatarURL?: string;
 }
 
 export class UserWithBasic extends PickType(User, [
@@ -85,6 +89,6 @@ export class UserWithBasic extends PickType(User, [
     'firstName',
     'lastName',
     'email',
-    // 'profilePictureName',
+    'avatarFileId',
     'createdAt'
 ] as const) { }

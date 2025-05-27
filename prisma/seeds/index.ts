@@ -5,18 +5,72 @@ import { UsersRepository } from '../../src/core/users/users.repository';
 import { createInitialUsers } from './users';
 import { HashingPasswordsService } from '../../src/core/users/hashing-passwords.service';
 import { HashingService } from '../../src/core/hashing/hashing.service';
+import { FilesService } from '../../src/core/files/files.service';
+import { FileRepository } from '../../src/core/files/files.repository';
+import { TargetType } from '@prisma/client';
+import * as fs from 'fs';
+import * as path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import { FileUploadService } from 'src/core/file-upload/file-upload.service';
+import { FilePathService } from 'src/core/files/file-path.utils';
+import { ConfigService } from '@nestjs/config';
+import { ApiConfigService } from 'src/config/api-config.service';
 
 class Seeder {
     constructor(
-        // private readonly databaseService: DatabaseService,
+        private readonly dbService: DatabaseService,
         private readonly usersService: UsersService,
-    ) {
-    }
+        private readonly filesService: FilesService,
+    ) {}
 
     async start() {
+        const defaultAvatarId = await this.seedDefaultAvatar();
+        console.log(`Default avatar created with ID: ${defaultAvatarId} 🖼️`);
+        
         await this.seedUsers();
         console.log('Users were created 👥');
+        
         console.log('Seeding completed 🍹');
+    }
+
+    async seedDefaultAvatar(): Promise<number> {
+        // Проверяем, существует ли дефолтный файл в БД с id=1
+        try {
+            const existingFile = await this.filesService.findById(1);
+            if (existingFile) {
+                console.log('Default avatar already exists ✅');
+                return existingFile.id;
+            }
+        } catch (error) {
+            // Файл не найден, создаем новый
+        }
+    
+        // Путь к дефолтному файлу аватарки в публичной папке
+        const defaultAvatarPath = path.join(process.cwd(), 'public', 'assets', 'defaults', 'avatars', 'default-avatar.png');
+        
+        // Убедимся, что папка для дефолтных аватарок существует
+        const defaultAvatarDir = path.join(process.cwd(), 'public', 'assets', 'defaults', 'avatars');
+        if (!fs.existsSync(defaultAvatarDir)) {
+            fs.mkdirSync(defaultAvatarDir, { recursive: true });
+            // Здесь можно скопировать дефолтную аватарку из ресурсов проекта, если она еще не существует
+        }
+    
+        // Генерируем ключ файла для БД
+        const fileKey = 'default-avatar'; // Используем предсказуемый ключ для дефолтного файла
+        const fileExt = 'png';
+        const mimeType = 'image/png';
+        
+        // Создаем запись в БД - без копирования файла, так как он уже находится в public/assets
+        const file = await this.filesService.create({
+            authorId: undefined,
+            isDefault: true,
+            targetType: TargetType.USER_AVATAR,
+            fileKey: fileKey,
+            mimeType: mimeType,
+            extension: fileExt,
+        });
+        
+        return file.id;
     }
 
     async seedUsers() {
@@ -24,12 +78,10 @@ class Seeder {
 
         for (const user of users) {
             const { profilePictureName, gender, ...userData } = user;
-            const createdUser = await this.usersService.create(userData);
-
-            // await this.usersService.updateUserAvatar(
-            //     createdUser.id,
-            //     profilePictureName
-            // );
+            // Устанавливаем profileFileId на 1 (ID дефолтной аватарки)
+            const createdUser = await this.usersService.create({
+                ...userData
+            });
         }
     }
 }
@@ -40,14 +92,25 @@ async function start() {
         const dbService = new DatabaseService();
         const hashingService = new HashingService();
         const passwordService = new HashingPasswordsService(hashingService);
+        const configService = new ConfigService();
+        const apiConfigService = new ApiConfigService(configService);
+        
+        const fileRepository = new FileRepository(dbService);
+        const filesService = new FilesService(fileRepository);
+        const filePathService = new FilePathService(configService);
 
         const userService = new UsersService(
             new UsersRepository(dbService),
-            passwordService,);
+            passwordService,
+            new FileUploadService(filesService, filePathService, apiConfigService),
+            filesService,
+            filePathService
+        );
 
         const seeder = new Seeder(
-            // dbService,
+            dbService,
             userService,
+            filesService
         );
         await seeder.start();
     } catch (e) {

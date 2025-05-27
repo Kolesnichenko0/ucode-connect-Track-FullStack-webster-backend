@@ -17,23 +17,24 @@ generator client {
 
 model User {
   id              Int      @id @default(autoincrement())
-  password        String   @db.VarChar(255)
+  avatarFileId    Int      @default(1) @map("avatar_file_id")
+  password        String?  @db.VarChar(255)
   firstName       String   @map("first_name") @db.VarChar(100)
   lastName        String?  @map("last_name") @db.VarChar(100)
   email           String   @unique(map: "uq_users_email") @db.VarChar(255)
-  // profileFileId   Int      @default(1) @map("profile_file_id")
   isEmailVerified Boolean  @default(false) @map("is_email_verified")
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 
-  refreshTokenNonces RefreshTokenNonce[] @relation("UserRefreshTokens")
-  // projects           Project[]           @relation("UserProjects")
-  // fonts              Font[]              @relation("UserFonts")
-  // authoredFiles      File[]              @relation("FileAuthor")
-  // profileFile        File                @relation("UserProfileFile", fields: [profileFileId], references: [id])
-  // usersFiles         UsersFiles[]        @relation("UserFiles")
+  // Relations
+  avatarFile         File                 @relation("UserAvatarFile", fields: [avatarFileId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  refreshTokenNonces RefreshTokenNonce[]  @relation("UserRefreshTokens")
+  // projects           Project[]            @relation("UserProjects")
+  // fonts              Font[]               @relation("UserFonts")
+  authoredFiles      File[]               @relation("FileAuthor")
+  // externalAccounts   ExternalAccount[]    @relation("UserExternalAccounts")
 
-  // @@index([profileFileId], map: "fk_users_profile_file_id")
+  @@index([avatarFileId], map: "fk_users_avatar_file_id")
   @@map("users")
 }
 
@@ -50,42 +51,58 @@ model RefreshTokenNonce {
   @@map("refresh_token_nonces")
 }
 
-// model File {
-//   id         Int        @id @default(autoincrement())
-//   isDefault  Boolean    @default(false) @map("is_default")
-//   authorId   Int?       @map("author_id")
-//   targetType TargetType @map("target_type")
-//   fileKey    String     @unique(map: "uq_files_file_key") @map("file_key") @db.VarChar(36)
-//   mimeType   String     @map("mime_type") @db.VarChar(100)
-//   extension  String     @db.VarChar(10)
-//   createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamp(0)
-//   updatedAt  DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+// model ExternalAccount {
+//   id         Int      @id @default(autoincrement())
+//   userId     Int      @map("user_id")
+//   provider   Provider // Enum defined below
+//   accountId  String   @map("account_id") @db.VarChar(255)
+//   avatarUrl  String?  @map("avatar_url") @db.VarChar(255)
+//   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+//   updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 
-//   author          User?         @relation("FileAuthor", fields: [authorId], references: [id])
-//   projectPreviews Project[]     @relation("ProjectPreviewFile")
-//   userProfiles    User[]        @relation("UserProfileFile")
-//   font            Font?         @relation("FontFile")
-//   projectsFiles   ProjectsFiles[] @relation("FileProjects")
-//   usersFiles      UsersFiles[]  @relation("FileUsers")
+//   user User @relation("UserExternalAccounts", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-//   @@index([authorId], map: "fk_files_author_id")
-//   @@map("files")
+//   @@index([userId], map: "fk_external_accounts_user_id")
+//   @@unique([accountId, provider], map: "uq_external_accounts_account_id_provider")
+//   @@index([userId, provider], map: "idx_external_accounts_user_id_provider")
+//   @@map("external_accounts")
 // }
+
+model File {
+  id          Int        @id @default(autoincrement())
+  authorId    Int?       @map("author_id")
+  isDefault   Boolean    @default(false) @map("is_default")
+  targetId    Int?       @map("target_id")
+  targetType  TargetType @map("target_type") // Enum defined below
+  fileKey     String     @unique(map: "uq_files_file_key") @map("file_key") @db.VarChar(36)
+  mimeType    String     @map("mime_type") @db.VarChar(100)
+  extension   String     @db.VarChar(10)
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt   DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+  deletedAt   DateTime?  @map("deleted_at") @db.Timestamp(0)
+
+  author            User?    @relation("FileAuthor", fields: [authorId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  userAvatars       User[]   @relation("UserAvatarFile") // Связь для User.avatarFileId
+  // projectPreviewFor Project? @relation("ProjectPreviewFile") // Связь для Project.previewFileId
+  // fontFileFor       Font?    @relation("FontFile") // Связь для Font.fileId
+
+  @@index([authorId], map: "fk_files_author_id")
+  @@map("files")
+}
 
 // model Project {
 //   id            Int      @id @default(autoincrement())
 //   userId        Int?     @map("user_id")
-//   isDefault     Boolean  @default(false) @map("is_default")
+//   previewFileId Int      @unique(map: "uq_fk_projects_preview_file_id") @map("preview_file_id")
+//   isTemplate    Boolean  @default(false) @map("is_template")
 //   title         String   @db.VarChar(100)
 //   description   String?  @db.Text
 //   content       Json
-//   previewFileId Int      @unique(map: "uq_fk_projects_preview_file_id") @map("preview_file_id")
 //   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(0)
 //   updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 
-//   user          User?    @relation("UserProjects", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-//   previewFile   File     @relation("ProjectPreviewFile", fields: [previewFileId], references: [id])
-//   projectsFiles ProjectsFiles[] @relation("ProjectFiles")
+//   user        User? @relation("UserProjects", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+//   previewFile File  @relation("ProjectPreviewFile", fields: [previewFileId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
 //   @@index([userId], map: "fk_projects_user_id")
 //   @@index([userId, title], map: "idx_projects_user_id_title")
@@ -94,51 +111,26 @@ model RefreshTokenNonce {
 
 // model Font {
 //   id        Int      @id @default(autoincrement())
-//   userId    Int?     @map("user_id")
-//   title     String   @db.VarChar(100)
+//   userId    Int      @map("user_id")
 //   fileId    Int      @unique(map: "uq_fk_fonts_file_id") @map("file_id")
+//   title     String   @db.VarChar(100)
 //   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
 //   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 
-//   user  User? @relation("UserFonts", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-//   file  File  @relation("FontFile", fields: [fileId], references: [id])
+//   user User @relation("UserFonts", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+//   file File @relation("FontFile", fields: [fileId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
 //   @@index([userId], map: "fk_fonts_user_id")
 //   @@index([userId, title], map: "idx_fonts_user_id_title")
 //   @@map("fonts")
 // }
 
-// model ProjectsFiles {
-//   projectId   Int      @map("project_id")
-//   fileId      Int      @map("file_id")
-//   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(0)
-
-//   project Project @relation("ProjectFiles", fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-//   file    File    @relation("FileProjects", fields: [fileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-//   @@id([projectId, fileId], map: "pk_projects_files_project_id_file_id")
-//   @@index([projectId], map: "fk_projects_files_project_id")
-//   @@index([fileId], map: "fk_projects_files_file_id")
-//   @@map("projects_files")
-// }
-
-// model UsersFiles {
-//   userId     Int      @map("user_id")
-//   fileId     Int      @map("file_id")
-//   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(0)
-
-//   user User @relation("UserFiles", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-//   file File @relation("FileUsers", fields: [fileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-//   @@id([userId, fileId], map: "pk_users_files_user_id_file_id")
-//   @@index([userId], map: "fk_users_files_user_id")
-//   @@index([fileId], map: "fk_users_files_file_id")
-//   @@map("users_files")
-// }
-
-// enum TargetType {
-//   PROJECT_ASSET   @map("project_asset")
-//   USER_AVATAR     @map("user_avatar")
-//   PROJECT_PREVIEW @map("project_preview")
-//   FONT_ASSET      @map("font_asset")
-// }
+enum TargetType {
+  PROJECT_ASSET   @map("project_asset")
+  USER_AVATAR     @map("user_avatar")
+  PROJECT_PREVIEW @map("project_preview")
+  FONT_ASSET      @map("font_asset")
+}
+enum Provider {
+  google // Как указано в схеме external_accounts
+}

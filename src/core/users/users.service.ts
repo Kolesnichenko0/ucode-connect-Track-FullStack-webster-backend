@@ -13,12 +13,23 @@ import { HashingPasswordsService } from './hashing-passwords.service';
 import { plainToInstance } from 'class-transformer';
 import { UpdateUserPasswordDto } from './dto/update-user-password.dto';
 import { GetUsersDto } from './dto/get-users.dto';
+import { TargetType } from '@prisma/client';
+import { UploadFileDto } from '../file-upload/dto/upload-file.dto';
+import { FileUploadService } from '../file-upload/file-upload.service';
+import { FilesService } from '../files/files.service';
+import { FilePathService } from '../files/file-path.utils';
 
 @Injectable()
 export class UsersService {
+
+    private readonly TARGET_TYPE = TargetType.USER_AVATAR;
+
     constructor(
         private readonly usersRepository: UsersRepository,
         private readonly passwordService: HashingPasswordsService,
+        private readonly fileUploadService: FileUploadService,
+        private readonly filesService: FilesService,
+        private readonly filePathService: FilePathService
     ) { }
 
     async create(dto: CreateUserDto): Promise<User> {
@@ -70,7 +81,13 @@ export class UsersService {
     }
 
     async findByIdWithConfidential(id: number): Promise<User> {
-        return this.findById(id, SERIALIZATION_GROUPS.CONFIDENTIAL);
+        const user: User = await this.findById(id, SERIALIZATION_GROUPS.CONFIDENTIAL)
+
+        const fileAvatar = await this.filesService.findById(user.avatarFileId);
+
+        user.avatarURL = this.filePathService.getFileUrl(fileAvatar)
+
+        return user;
     }
 
     async findByEmail(email: string): Promise<User> {
@@ -108,10 +125,13 @@ export class UsersService {
         if (!user) {
             throw new NotFoundException('User with this id not found');
         }
-        const isMatch = await this.passwordService.compare(
+
+        const isMatch = user.password ? 
+        await this.passwordService.compare(
             dto.oldPassword,
             user.password,
-        );
+        ) : true; //TODO: If user doesn`t have password return true. User have access to update password
+
         if (!isMatch) {
             throw new UnauthorizedException('Old password does not match');
         }
@@ -129,24 +149,44 @@ export class UsersService {
         });
     }
 
-    // async updateAvatar(
-    //     id: number,
-    //     profilePictureName: string,
-    // ): Promise<User> {
-    //     const user = await this.findUserById(id);
-    //     if (!user) {
-    //         throw new NotFoundException('User with this email not found');
-    //     }
-    //     const result = await this.usersRepository.update(id, {
-    //         profilePictureName,
-    //     });
-    //     if (!result) {
-    //         throw new NotFoundException('User not found');
-    //     }
-    //     return plainToInstance(User, result, {
-    //         groups: SERIALIZATION_GROUPS.CONFIDENTIAL,
-    //     });
-    // }
+    async updateUserAvatar(
+        id: number,
+        avatar: Express.Multer.File,
+    ): Promise<User> {
+        const user = await this.findById(id);
+        if (!user) {
+            throw new NotFoundException('User with this email not found');
+        }
+
+        const fileDbDetails: UploadFileDto = {
+            authorId: id,
+            targetType: this.TARGET_TYPE,
+            targetId: id,
+        };
+
+        const fileUploadResult = await this.fileUploadService.upload(avatar, fileDbDetails);
+
+        const result = await this.usersRepository.update(id, {
+            avatarFileId: fileUploadResult.fileId,
+        });
+        if (!result) {
+            throw new NotFoundException('User not found');
+        }
+
+        const oldAvatar = await this.filesService.findById(user.avatarFileId);
+
+        if (!oldAvatar.isDefault) {
+            await this.filesService.softDelete(user.avatarFileId);
+        }
+
+        const userInstance: User = plainToInstance(User, result, {
+            groups: SERIALIZATION_GROUPS.CONFIDENTIAL,
+        });
+
+        userInstance.avatarURL = fileUploadResult.url;
+
+        return userInstance;
+    }
 
     async resetPassword(id: number, newPassword: string): Promise<User> {
         const hashedPassword = await this.passwordService.hash(newPassword);

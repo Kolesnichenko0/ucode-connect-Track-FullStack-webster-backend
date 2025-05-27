@@ -10,30 +10,25 @@
         "start:prod": "cross-env NODE_ENV=production node dist/main",
         "start:dev": "cross-env NODE_ENV=development nest start --watch",
         "start:debug:dev": "cross-env NODE_ENV=development nest start --debug --watch",
-
         "setup:db": "ts-node src/setup/setupdb.ts",
-
         "migrate:dev": "dotenv -e .env.development -- npx prisma migrate deploy",
         "migrate:create:dev": "dotenv -e .env.development -- npx prisma migrate dev",
         "migrate:generate:dev": "dotenv -e .env.development -- npx prisma generate",
         "migrate:seed:dev": "dotenv -e .env.development -- npx prisma db seed",
         "migrate:reset:dev": "npm run migrate:dev && npm run migrate:generate:dev && npm run build && dotenv -e .env.development -- npx prisma migrate reset --force",
         "migrate:refresh:dev": "npm run migrate:reset:dev && npm run migrate:generate:dev",
-
         "migrate:test": "dotenv -e .env.test -- npx prisma migrate deploy",
         "migrate:create:test": "dotenv -e .env.test -- npx prisma migrate dev",
         "migrate:generate:test": "dotenv -e .env.test -- npx prisma generate",
         "migrate:seed:test": "dotenv -e .env.test -- npx prisma db seed",
         "migrate:reset:test": "npm run migrate:test && npm run migrate:generate:test && npm run build && dotenv -e .env.test -- npx prisma migrate reset --force",
         "migrate:refresh:test": "npm run migrate:reset:test && npm run migrate:generate:test",
-
         "test": "npx jest --clearCache && npx jest",
         "test:unit": "npx jest --watch --config jest-unit.config.ts",
         "test:e2e": "npx jest --watch --config jest-e2e.config.ts",
         "test:watch": "npx jest --watch",
         "test:cov": "npx jest --coverage",
         "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-
         "build": "nest build",
         "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
         "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
@@ -65,6 +60,7 @@
         "cookie-parser": "^1.4.7",
         "csurf": "^1.2.2",
         "dotenv-expand": "^12.0.1",
+        "file-type": "^15.0.1",
         "googleapis": "^146.0.0",
         "multer": "^1.4.5-lts.1",
         "mysql2": "^3.13.0",
