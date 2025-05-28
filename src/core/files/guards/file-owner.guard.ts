@@ -1,4 +1,4 @@
-// src/core/files/guards/file-access.guard.ts
+// src/core/files/guards/file-owner.guard.ts
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { FilesService } from '../files.service';
 

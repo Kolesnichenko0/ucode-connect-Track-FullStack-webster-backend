@@ -1,8 +1,8 @@
 // src/core/files/files.repository.ts
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../db/database.service';
-import { CreateFileDto, UpdateFileDto } from './dto';
-import { File, TargetType } from '@prisma/client';
+import { CreateFileDto } from './dto/create-file.dto';
+import { File, FileTargetType } from '@prisma/client';
 
 @Injectable()
 export class FileRepository {
@@ -32,7 +32,7 @@ export class FileRepository {
     });
   }
 
-  async update(id: number, data: UpdateFileDto): Promise<File> {
+  async update(id: number, data: any): Promise<File> {
     return this.db.file.update({
       where: { id },
       data,
@@ -57,7 +57,7 @@ export class FileRepository {
     });
   }
 
-  
+
 
   async hardDelete(id: number): Promise<void> {
     await this.db.file.delete({
@@ -82,7 +82,7 @@ export class FileRepository {
     });
   }
 
-  async findDefaultByTargetType(targetType: TargetType): Promise<File[]> {
+  async findDefaultByTargetType(targetType: FileTargetType): Promise<File[]> {
     return this.db.file.findMany({
       where: {
         targetType,

@@ -1,4 +1,4 @@
-import { File as PrismaFile, TargetType } from '@prisma/client';
+import { File as PrismaFile, FileTargetType } from '@prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 
@@ -47,10 +47,10 @@ export class File implements PrismaFile {
   @Expose({ groups: ['basic'] })
   @ApiProperty({
     description: 'Target type',
-    enum: TargetType,
-    example: TargetType.USER_AVATAR,
+    enum: FileTargetType,
+    example: FileTargetType.USER_AVATAR,
   })
-  targetType: TargetType;
+  targetType: FileTargetType;
 
   @Expose({ groups: ['basic'] })
   @ApiProperty({
@@ -94,9 +94,9 @@ export class File implements PrismaFile {
   @Expose({ groups: ['basic'] })
   @ApiProperty({
     description: 'Deleted date',
-    nullable: true, 
+    nullable: true,
     type: 'string',
     example: '2025-05-08T05:54:45.000Z',
   })
   deletedAt: Date;
-} 
+}

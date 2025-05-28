@@ -9,7 +9,7 @@ import { EmailModule } from '../email/email.module';
 import { AuthModule } from '../auth/auth.module';
 import { HashingModule } from '../hashing/hashing.module';
 import { FileUploadService } from '../file-upload/file-upload.service';
-import { FileUploadModule } from '../file-upload';
+import { FileUploadModule } from '../file-upload/file-upload.module';
 import { FilesModule } from '../files/files.module';
 
 @Module({

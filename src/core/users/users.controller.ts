@@ -29,13 +29,8 @@ import {
     OmitType,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { 
-    UploadFileTypeValidator, 
-    UploadFileSizeValidator,
-    UPLOAD_ALLOWED_FILE_MIME_TYPES,
-    UPLOAD_ALLOWED_MAX_FILE_SIZES,
-    UPLOAD_ALLOWED_FILE_EXTENSIONS 
-  } from '../../core/file-upload';
+import { UploadFileTypeValidator, UploadFileSizeValidator } from '../file-upload/validators';
+import { UPLOAD_ALLOWED_FILE_MIME_TYPES, UPLOAD_ALLOWED_FILE_EXTENSIONS, UPLOAD_ALLOWED_MAX_FILE_SIZES } from '../file-upload/constants/file-upload.contsants';
 
 @Controller('users')
 @ApiTags('Users')

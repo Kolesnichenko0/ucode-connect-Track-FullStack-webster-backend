@@ -1,21 +1,21 @@
 Table users {
   "id" INT [pk, increment]
-  "password" VARCHAR(255) [not null]
+  "avatar_file_id" INT [not null]
+  "password" VARCHAR(255)
   "first_name" VARCHAR(100) [not null]
   "last_name" VARCHAR(100)
   "email" VARCHAR(255) [not null]
-  "profile_file_id" INT [not null, default: 1]
-  "is_email_verified" BOOL [not null, default: 0]
+  "is_email_verified" BOOL [not null, default: false]
   "created_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
   "updated_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
 
   Indexes {
     email [unique, name: "uq_users_email"]
-    profile_file_id [name: "fk_users_profile_file_id"]
+    avatar_file_id [name: "fk_users_avatar_file_id"]
   }
 }
 
-Table "refresh_token_nonces" {
+Table refresh_token_nonces {
   "id" INT [pk, increment]
   "user_id" INT [not null]
   "nonce" CHAR(32) [not null]
@@ -27,96 +27,81 @@ Table "refresh_token_nonces" {
   }
 }
 
+Table external_accounts {
+  "id" INT [pk, increment]
+  "user_id" INT [not null]
+  "provider" ENUM('google') [not null]
+  "account_id" VARCHAR(255) [not null]
+  "avatar_url" VARCHAR(255)
+  "created_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
+  "updated_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
+
+  Indexes {
+    user_id [name: "fk_external_accounts_user_id"]
+    (account_id, provider) [name: "uq_external_accounts_account_id_provider"]
+    (user_id, provider) [name: "idx_external_accounts_user_id_provider"]
+  }
+}
+
 Table files {
   "id" INT [pk, increment]
-  "is_default" BOOL [not null, default: false]
   "author_id" INT
-  "target_type" ENUM('project_asset', 'user_avatar', 'project_preview', 'font_asset') [not null]
+  "is_default" BOOL [not null, default: false]
+  "target_id" INT
+  "target_type" ENUM('user_avatar', 'project_asset', 'project_preview', 'font_asset') [not null]
   "file_key" VARCHAR(36) [not null, unique]
   "mime_type" VARCHAR(100) [not null]
   "extension" VARCHAR(10) [not null]
   "created_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
   "updated_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
+  "deleted_at" TIMESTAMP
 
   Indexes {
     author_id [name: "fk_files_author_id"]
-    file_key [name: "uq_files_file_key"] 
+    file_key [name: "uq_files_file_key"]
   }
 }
 
 Table projects {
   "id" INT [pk, increment]
-  "user_id" INT
-  "is_default" BOOL [not null, default: false]
+  "author_id" INT
+  "preview_file_id" INT [not null, unique]
+  "is_template" BOOL [not null, default: false]
   "title" VARCHAR(100) [not null]
   "description" TEXT
   "content" JSON [not null]
-  "preview_file_id" INT [not null, unique]
   "created_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
   "updated_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
 
   Indexes {
-    user_id [name: "fk_projects_user_id"]
+    author_id [name: "fk_projects_author_id"]
     preview_file_id [name: "uq_fk_projects_preview_file_id"]
-    (user_id, title) [name: "idx_projects_user_id_title"]
+    (author_id, title) [name: "idx_projects_author_id_title"]
   }
 }
 
 Table fonts {
   "id" INT [pk, increment]
-  "user_id" INT
-  "title" VARCHAR(100) [not null]
+  "user_id" INT [not null]
   "file_id" INT [not null, unique]
+  "title" VARCHAR(100) [not null]
   "created_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
   "updated_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
 
   Indexes {
     user_id [name: "fk_fonts_user_id"]
-    file_id [name: "uq_fk_fonts_file_id"] 
+    file_id [name: "uq_fk_fonts_file_id"]
     (user_id, title) [name: "idx_fonts_user_id_title"]
   }
 }
 
-Table projects_files {
-  "project_id" INT [not null]
-  "file_id" INT [not null]
-  "created_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
+Ref: "users"."id" < "refresh_token_nonces"."user_id" [delete: cascade]
+Ref: "users"."id" < "projects"."author_id" [delete: cascade]
+Ref: "users"."id" < "fonts"."user_id" [delete: cascade]
+Ref: "users"."id" < "files"."author_id" [delete: set null]
+Ref: "users"."id" < "external_accounts"."user_id" [delete: cascade]
 
-  Indexes {
-    (project_id, file_id) [pk, name: "pk_projects_files_project_id_file_id"]
-    project_id [name: "fk_projects_files_project_id"]
-    file_id [name: "fk_projects_files_file_id"]
-  }
-}
+Ref: "files"."id" < "users"."avatar_file_id" [delete: restrict]
+Ref: "files"."id" < "fonts"."file_id" [delete: restrict]
+Ref: "files"."id" < "projects"."preview_file_id" [delete: restrict]
 
-Table users_files {
-  "user_id" INT [not null]
-  "file_id" INT [not null]
-  "created_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
-
-  Indexes {
-    (user_id, file_id) [pk, name: "pk_users_files_user_id_file_id"]
-    user_id [name: "fk_users_files_user_id"]
-    file_id [name: "fk_users_files_file_id"]
-  }
-}
-
-
-
-Ref: "users"."id" < "refresh_token_nonces"."user_id" [delete: cascade, update: cascade]
-Ref: "users"."id" < "projects"."user_id" [delete: cascade, update: cascade]
-Ref: "users"."id" < "fonts"."user_id" [delete: cascade, update: cascade]
-
-Ref: "users"."id" < "files"."author_id"
-
-Ref: "files"."id" < "projects"."preview_file_id"
-
-Ref: "files"."id" < "fonts"."file_id"
-
-Ref: "files"."id" < "users"."profile_file_id"
-
-Ref: "projects"."id" < "projects_files"."project_id" [delete: cascade, update: cascade]
-Ref: "files"."id" < "projects_files"."file_id" [delete: cascade, update: cascade]
-
-Ref: "users"."id" < "users_files"."user_id" [delete: cascade, update: cascade]
-Ref: "files"."id" < "users_files"."file_id" [delete: cascade, update: cascade]

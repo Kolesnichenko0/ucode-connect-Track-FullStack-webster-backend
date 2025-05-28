@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { FilesService } from '../files/files.service';
 import { UploadFileDto } from './dto/upload-file.dto';
 import { FilePathService } from '../files/file-path.utils';
-import { TargetType } from '@prisma/client';
+import { FileTargetType } from '@prisma/client';
 import { ApiConfigService } from 'src/config/api-config.service';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class FileUploadService {
     private readonly filesService: FilesService,
     private readonly filePathService: FilePathService,
     private readonly cs: ApiConfigService
-  ) {  
+  ) {
   }
 
   async upload(
@@ -28,13 +28,13 @@ export class FileUploadService {
 
     const targetDir = (()=> {
       switch (fileMetadata.targetType) {
-        case TargetType.USER_AVATAR:
+        case FileTargetType.USER_AVATAR:
           return this.cs.get('storage.paths.uploads.userAvatars')
-        case TargetType.PROJECT_ASSET:
+        case FileTargetType.PROJECT_ASSET:
           return this.cs.get('storage.paths.uploads.projectAssets')
-        case TargetType.PROJECT_PREVIEW:
+        case FileTargetType.PROJECT_PREVIEW:
           return this.cs.get('storage.paths.uploads.projectPreviews')
-        case TargetType.FONT_ASSET:
+        case FileTargetType.FONT_ASSET:
           return this.cs.get('storage.paths.uploads.fontAssets')
         default:
           return this.cs.get('storage.paths.uploads.others')
@@ -72,7 +72,7 @@ export class FileUploadService {
   async delete(fileKey: string, targetType: string): Promise<void> {
     try {
       await this.filesService.deleteByFileKey(fileKey);
-      
+
     } catch (error) {
       throw new BadRequestException(`Failed to delete file: ${error.message}`);
     }
@@ -90,5 +90,5 @@ export class FileUploadService {
     }
   }
 
-  
+
 }

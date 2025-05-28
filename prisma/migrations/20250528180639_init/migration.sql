@@ -1,7 +1,7 @@
 -- CreateTable
 CREATE TABLE `users` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `avatar_file_id` INTEGER NOT NULL DEFAULT 1,
+    `avatar_file_id` INTEGER NOT NULL,
     `password` VARCHAR(255) NULL,
     `first_name` VARCHAR(100) NOT NULL,
     `last_name` VARCHAR(100) NULL,
@@ -33,7 +33,7 @@ CREATE TABLE `files` (
     `author_id` INTEGER NULL,
     `is_default` BOOLEAN NOT NULL DEFAULT false,
     `target_id` INTEGER NULL,
-    `target_type` ENUM('project_asset', 'user_avatar', 'project_preview', 'font_asset') NOT NULL,
+    `target_type` ENUM('user_avatar', 'project_asset', 'project_preview', 'font_asset') NOT NULL,
     `file_key` VARCHAR(36) NOT NULL,
     `mime_type` VARCHAR(100) NOT NULL,
     `extension` VARCHAR(10) NOT NULL,

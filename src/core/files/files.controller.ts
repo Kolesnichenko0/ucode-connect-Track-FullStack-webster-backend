@@ -1,9 +1,9 @@
 // src/core/files/files.controller.ts
-import { 
-  Controller, 
-  Get, 
-  Param, 
-  Res, 
+import {
+  Controller,
+  Get,
+  Param,
+  Res,
   UseGuards,
   StreamableFile,
   Delete,
@@ -12,11 +12,9 @@ import {
 } from '@nestjs/common';
 import { FilesService } from './files.service';
 import { ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { File, TargetType } from '@prisma/client';
-import { FilePathService } from './file-path.utils';
+import { FileTargetType } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/auth.guards';
 import { FileOwnerGuard } from './guards/file-owner.guard';
-import { createReadStream } from 'fs';
 import { Response } from 'express';
 import { UserId } from '../../common/decorators/user.decorator';
 import { Public } from 'src/common/decorators';
@@ -31,9 +29,9 @@ export class FilesController {
   @Get('default/:target_type')
   @Public()
   @ApiOperation({ summary: 'Get all default file URLs by target type' })
-  @ApiParam({ name: 'target_type', description: 'Target type', enum: TargetType })
+  @ApiParam({ name: 'target_type', description: 'Target type', enum: FileTargetType })
   async getDefaultFileUrls(
-    @Param('target_type') targetType: TargetType,
+    @Param('target_type') targetType: FileTargetType,
   ): Promise<string[]> {
     return this.filesService.getDefaultFileUrlsByTargetType(targetType);
   }

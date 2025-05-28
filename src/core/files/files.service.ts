@@ -1,11 +1,11 @@
 // src/core/files/files.service.ts
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { TargetType } from '@prisma/client';
+import { FileTargetType } from '@prisma/client';
 import { FileRepository } from './files.repository';
-import { CreateFileDto, UpdateFileDto } from './dto';
+import { CreateFileDto } from './dto/create-file.dto';
 import { File } from '@prisma/client';
 import { createReadStream } from 'fs';
-import { StreamableFile, Response } from '@nestjs/common';
+import { StreamableFile } from '@nestjs/common';
 import { FilePathService } from './file-path.utils';
 import { Response as ExpressResponse } from 'express';
 
@@ -38,11 +38,6 @@ export class FilesService {
     }
 
     return file;
-  }
-
-  async update(id: number, updateFileDto: UpdateFileDto): Promise<File> {
-    await this.findById(id);
-    return this.fileRepository.update(id, updateFileDto);
   }
 
   async softDelete(id: number): Promise<File> {
@@ -110,7 +105,7 @@ export class FilesService {
 
 
 
-  async getDefaultFileUrlsByTargetType(targetType: TargetType): Promise<string[]> {
+  async getDefaultFileUrlsByTargetType(targetType: FileTargetType): Promise<string[]> {
     const files = await this.fileRepository.findDefaultByTargetType(targetType);
     return files.map(f => this.filePathService.getFileUrl(f));
   }

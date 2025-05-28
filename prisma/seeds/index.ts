@@ -7,7 +7,7 @@ import { HashingPasswordsService } from '../../src/core/users/hashing-passwords.
 import { HashingService } from '../../src/core/hashing/hashing.service';
 import { FilesService } from '../../src/core/files/files.service';
 import { FileRepository } from '../../src/core/files/files.repository';
-import { TargetType } from '@prisma/client';
+import { FileTargetType } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -26,10 +26,10 @@ class Seeder {
     async start() {
         const defaultAvatarId = await this.seedDefaultAvatar();
         console.log(`Default avatar created with ID: ${defaultAvatarId} 🖼️`);
-        
+
         await this.seedUsers();
         console.log('Users were created 👥');
-        
+
         console.log('Seeding completed 🍹');
     }
 
@@ -44,32 +44,32 @@ class Seeder {
         } catch (error) {
             // Файл не найден, создаем новый
         }
-    
+
         // Путь к дефолтному файлу аватарки в публичной папке
         const defaultAvatarPath = path.join(process.cwd(), 'public', 'assets', 'defaults', 'avatars', 'default-avatar.png');
-        
+
         // Убедимся, что папка для дефолтных аватарок существует
         const defaultAvatarDir = path.join(process.cwd(), 'public', 'assets', 'defaults', 'avatars');
         if (!fs.existsSync(defaultAvatarDir)) {
             fs.mkdirSync(defaultAvatarDir, { recursive: true });
             // Здесь можно скопировать дефолтную аватарку из ресурсов проекта, если она еще не существует
         }
-    
+
         // Генерируем ключ файла для БД
         const fileKey = 'default-avatar'; // Используем предсказуемый ключ для дефолтного файла
         const fileExt = 'png';
         const mimeType = 'image/png';
-        
+
         // Создаем запись в БД - без копирования файла, так как он уже находится в public/assets
         const file = await this.filesService.create({
             authorId: undefined,
             isDefault: true,
-            targetType: TargetType.USER_AVATAR,
+            targetType: FileTargetType.USER_AVATAR,
             fileKey: fileKey,
             mimeType: mimeType,
             extension: fileExt,
         });
-        
+
         return file.id;
     }
 
@@ -94,10 +94,10 @@ async function start() {
         const passwordService = new HashingPasswordsService(hashingService);
         const configService = new ConfigService();
         const apiConfigService = new ApiConfigService(configService);
-        
+
         const fileRepository = new FileRepository(dbService);
-        const filesService = new FilesService(fileRepository);
         const filePathService = new FilePathService(configService);
+        const filesService = new FilesService(fileRepository, filePathService);
 
         const userService = new UsersService(
             new UsersRepository(dbService),

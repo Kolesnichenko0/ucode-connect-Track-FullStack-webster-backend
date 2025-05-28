@@ -1,8 +1,11 @@
 // src/core/files/dto/create-file.dto.ts
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
-import { TargetType } from '@prisma/client';
+import { FileTargetType } from '@prisma/client';
 import { IsBooleanField, IsEnumValue, IsId } from 'src/common/validators';
+import { IsUuidValue } from '../../../common/validators/uuid.validator';
+import { IsFileMimeType } from '../validators/file-mime-type.validator';
+import { IsFileExtension } from '../validators/file-extension.validator';
 
 export class CreateFileDto {
   @ApiPropertyOptional({ description: 'ID of the author (user)' })
@@ -17,21 +20,19 @@ export class CreateFileDto {
   @IsId(true)
   targetId?: number;
 
-  @ApiProperty({ enum: TargetType, description: 'Type of the target entity' })
-  @IsEnumValue(TargetType, false)
-  targetType: TargetType;
+  @ApiProperty({ enum: FileTargetType, description: 'Type of the target entity' })
+  @IsEnumValue(FileTargetType, false)
+  targetType: FileTargetType;
 
   @ApiProperty({ description: 'Unique key for the file' })
-  @IsUUID('4', { message: 'Invalid UUID format' })
+  @IsUuidValue(false)
   fileKey: string;
 
   @ApiProperty({ description: 'MIME type of the file' })
-  @IsNotEmpty()
-  @IsString()//TODO: Доделать 
+  @IsFileMimeType(false)
   mimeType: string;
 
   @ApiProperty({ description: 'File extension' })
-  @IsNotEmpty()
-  @IsString()
+  @IsFileExtension(false)
   extension: string;
 }

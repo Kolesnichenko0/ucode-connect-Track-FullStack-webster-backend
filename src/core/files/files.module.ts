@@ -6,21 +6,17 @@ import { FileRepository } from './files.repository';
 import { FilesController } from './files.controller';
 import { FilePathService } from './file-path.utils';
 import { UsersModule } from '../users/users.module';
-import { FileCleanupService } from './scheduler/file-cleanup.scheduler';
-import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     forwardRef(() => UsersModule),
-    ScheduleModule.forRoot()
   ],
   controllers: [FilesController],
   providers: [
-    FilesService, 
-    FileRepository, 
-    DatabaseService, 
+    FilesService,
+    FileRepository,
+    DatabaseService,
     FilePathService,
-    FileCleanupService
   ],
   exports: [FilesService, FilePathService],
 })

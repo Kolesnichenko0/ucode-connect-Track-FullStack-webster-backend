@@ -13,7 +13,7 @@ import { HashingPasswordsService } from './hashing-passwords.service';
 import { plainToInstance } from 'class-transformer';
 import { UpdateUserPasswordDto } from './dto/update-user-password.dto';
 import { GetUsersDto } from './dto/get-users.dto';
-import { TargetType } from '@prisma/client';
+import { FileTargetType } from '@prisma/client';
 import { UploadFileDto } from '../file-upload/dto/upload-file.dto';
 import { FileUploadService } from '../file-upload/file-upload.service';
 import { FilesService } from '../files/files.service';
@@ -22,7 +22,7 @@ import { FilePathService } from '../files/file-path.utils';
 @Injectable()
 export class UsersService {
 
-    private readonly TARGET_TYPE = TargetType.USER_AVATAR;
+    private readonly TARGET_TYPE = FileTargetType.USER_AVATAR;
 
     constructor(
         private readonly usersRepository: UsersRepository,
@@ -126,7 +126,7 @@ export class UsersService {
             throw new NotFoundException('User with this id not found');
         }
 
-        const isMatch = user.password ? 
+        const isMatch = user.password ?
         await this.passwordService.compare(
             dto.oldPassword,
             user.password,

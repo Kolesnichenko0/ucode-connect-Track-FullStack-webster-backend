@@ -1,7 +1,6 @@
 // src/core/files/dto/file-metadata.dto.ts
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsOptional } from 'class-validator';
-import { TargetType } from '@prisma/client';
+import { FileTargetType } from '@prisma/client';
 import { IsBooleanField, IsEnumValue, IsId } from 'src/common/validators';
 
 export class UploadFileDto {
@@ -9,9 +8,9 @@ export class UploadFileDto {
   @IsId(true)
   authorId?: number;
 
-  @ApiProperty({ enum: TargetType, description: 'Type of the target entity' })
-  @IsEnumValue(TargetType, false)
-  targetType: TargetType;
+  @ApiProperty({ enum: FileTargetType, description: 'Type of the target entity' })
+  @IsEnumValue(FileTargetType, false)
+  targetType: FileTargetType;
 
   @ApiPropertyOptional({ description: 'ID of the target entity' })
   @IsId(true)
