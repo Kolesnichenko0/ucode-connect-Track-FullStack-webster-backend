@@ -1,6 +1,6 @@
-// src/config/configs/special/database.root.config.ts
+// setup/config/database.root.config.ts
 import { z } from 'zod';
-import { ConfigValidator } from '../../config.validator';
+import { ConfigValidator } from '../../src/config/config.validator';
 
 const DatabaseRootSchema = z.object({
   DB_ROOT_HOST: z.string(),

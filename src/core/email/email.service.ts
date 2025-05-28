@@ -2,11 +2,11 @@
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { ApiConfigService } from '../../config/api-config.service';
-import { GoogleOAuthService } from '../google/google-oauth.service';
 import * as fs from 'fs';
 import * as path from 'path';
 import { EmailTemplateInterface } from './templates/email-template.interface';
 import emailTemplates from './templates/email.templates';
+import { GoogleAuth } from 'google-auth-library';
 
 
 @Injectable()
@@ -14,22 +14,21 @@ export class EmailService {
     private appName: string;
     private logo: any;
     private templates: EmailTemplateInterface;
+    private transporter: nodemailer.Transporter;
 
     constructor(
         private readonly cs: ApiConfigService,
-        private readonly googleOAuthService: GoogleOAuthService,
     ) {
-        if (this.cs.get('google.useGmail')) {
-            this.googleOAuthService.setCredentials(
-                this.cs.get('google.gmailApi.refreshToken'),
-            );
-        }
         this.templates = emailTemplates;
-
-        this.init();
     }
 
-    private async init() {
+    async onModuleInit() {
+        await this.initLogo();
+        this.transporter = await this.createTransport();
+        await this.verifyTransporter();
+    }
+
+    private async initLogo() {
         const projectPath = this.cs.get('app.paths.publicAssets.logos');
         const logoFilename = this.cs.get('app.logo.filename');
 
@@ -49,22 +48,50 @@ export class EmailService {
         const useGmail = this.cs.get('google.useGmail');
 
         if (useGmail) {
-            const accessToken = await this.googleOAuthService.getAccessToken();
-            const oauthDetails = this.googleOAuthService.getOAuthCredentials();
+            const senderEmail = this.cs.get('google.gmailApi.senderEmail');
+            if (this.cs.get('google.gmailApi.useServiceAccount')) {
+                const keyFilePath = this.cs.get('google.gmailApi.serviceAccountKey');
 
-            return nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    type: 'OAuth2',
-                    user: this.cs.get('google.gmailApi.user'),
-                    clientId: oauthDetails.clientId,
-                    clientSecret: oauthDetails.clientSecret,
-                    refreshToken: oauthDetails.refreshToken,
-                    redirectUri: oauthDetails.redirectUri,
-                    accessToken,
-                },
-            });
+                let serviceAccountCredentials;
+                try {
+                    const keyFileContent = fs.readFileSync(keyFilePath, 'utf8');
+                    serviceAccountCredentials = JSON.parse(keyFileContent);
+                } catch (error) {
+                    console.error('Failed to read or parse service account key file:', error);
+                    throw error;
+                }
+
+                if (!serviceAccountCredentials.client_id || !serviceAccountCredentials.private_key) {
+                    const errorMessage = 'Service account key file is missing client_id or private_key.';
+                    console.error(errorMessage, serviceAccountCredentials);
+                    throw new Error(errorMessage);
+                }
+
+
+                return nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: {
+                        type: 'OAuth2',
+                        user: senderEmail,
+                        serviceClient: serviceAccountCredentials.client_id,
+                        privateKey: serviceAccountCredentials.private_key,
+                    },
+                });
+            } else {
+                console.log('Using Gmail with OAuth2 (client ID, client secret, refresh token).');
+                return nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: {
+                        type: 'OAuth2',
+                        user: senderEmail,
+                        clientId: this.cs.get('google.gmailApi.clientId'),
+                        clientSecret: this.cs.get('google.gmailApi.clientSecret'),
+                        refreshToken: this.cs.get('google.gmailApi.refreshToken'),
+                    },
+                });
+            }
         } else {
+            console.log('Using Ethereal');
             return nodemailer.createTransport({
                 host: this.cs.get('ethereal.host'),
                 port: this.cs.get('ethereal.port'),
@@ -76,12 +103,20 @@ export class EmailService {
         }
     }
 
+    private async verifyTransporter() {
+        try {
+            await this.transporter.verify();
+            console.log('Nodemailer transporter is ready to send emails.');
+        } catch (error) {
+            console.error('Error verifying Nodemailer transporter:', error);
+            throw error;
+        }
+    }
+
     async sendEmail(to: string, subject: string, html: string): Promise<void> {
         try {
-            const transporter = await this.createTransport();
-
-            const info = await transporter.sendMail({
-                from: this.cs.get('google.gmailApi.user'),
+            const info = await this.transporter.sendMail({
+                from: this.cs.get('google.gmailApi.senderEmail'),
                 to,
                 subject,
                 html,
@@ -96,7 +131,6 @@ export class EmailService {
             console.log(`Email sent successfully: ${info.messageId}`);
         } catch (error) {
             console.error(`Failed to send email to ${to}`, error);
-            throw error;
         }
     }
 

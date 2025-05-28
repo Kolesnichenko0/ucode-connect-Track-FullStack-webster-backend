@@ -7,7 +7,7 @@ const EtherealSchema = z.object({
     ETHEREAL_PORT: z.coerce.number().default(587),
     ETHEREAL_USER: z.string().optional(),
     ETHEREAL_PASS: z.string().optional(),
-    GOOGLE_USE_GMAIL: z.preprocess((val) => val === 'true', z.boolean()).default(true),
+    GOOGLE_USE_GMAIL: z.preprocess((val) => val !== 'false', z.boolean()).default(true),
 }).refine(data => {
     if (!data.GOOGLE_USE_GMAIL) {
         return data.ETHEREAL_USER !== undefined && data.ETHEREAL_PASS !== undefined;

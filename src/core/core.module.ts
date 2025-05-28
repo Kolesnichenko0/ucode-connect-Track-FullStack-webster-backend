@@ -5,7 +5,6 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { DatabaseModule } from './db/database.module';
 import { EmailModule } from './email/email.module';
-import { GoogleModule } from './google/google.module';
 import { RefreshTokenNoncesModule } from './refresh-token-nonces/refresh-token-nonces.module';
 import { JobsModule } from './jobs/jobs.module';
 import { JwtModule } from './jwt/jwt.module';
@@ -19,7 +18,6 @@ import { HashingModule } from './hashing/hashing.module';
         // FilesModule,
         // FileUploadModule,
         HashingModule,
-        GoogleModule,
         JobsModule,
         JwtModule,
         RefreshTokenNoncesModule,
