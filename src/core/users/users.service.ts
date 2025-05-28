@@ -38,7 +38,7 @@ export class UsersService {
             throw new ConflictException('Email already in use');
         }
         dto.password = await this.passwordService.hash(dto.password);
-        const result = await this.usersRepository.create(dto);
+        const result = await this.usersRepository.create({...dto, avatarFileId: 1});
 
         return plainToInstance(User, result, {
             groups: SERIALIZATION_GROUPS.CONFIDENTIAL,

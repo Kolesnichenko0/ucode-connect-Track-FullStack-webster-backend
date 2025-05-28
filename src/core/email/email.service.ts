@@ -33,6 +33,7 @@ export class EmailService {
         const logoFilename = this.cs.get('app.logo.filename');
 
         const fullLogoPath = path.join(projectPath, logoFilename);
+        this.appName = this.cs.get('app.name');
         this.logo = await this.readLogoFile(fullLogoPath);
     }
 
