@@ -16,9 +16,12 @@ export class UnactivatedUsersCleanupSchedulerService {
 
     @Cron(JobsConstants.UNACTIVATED_USERS_CLEANUP_FROM_DB)
     async cleanupUnactivatedUsersFromDb() {
-        const EXPIRATION_TIME = convertToSeconds(this.cs.get('jwt.expiresIn.confirmEmail'));
+        const expirationTimeInSeconds = convertToSeconds(this.cs.get('jwt.expiresIn.confirmEmail'));
+        const createdBefore = new Date();
+        createdBefore.setSeconds(createdBefore.getSeconds() - expirationTimeInSeconds);
+
         const users: User[] =
-            await this.usersService.findAllUnactivated(EXPIRATION_TIME);
+            await this.usersService.findAllUnactivatedByCreatedAt(createdBefore);
 
         if (users.length > 0) {
             await Promise.all(

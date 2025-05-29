@@ -71,7 +71,7 @@ export class FileUploadService {
 
   async delete(fileKey: string, targetType: string): Promise<void> {
     try {
-      await this.filesService.deleteByFileKey(fileKey);
+      await this.filesService.softDeleteByFileKey(fileKey);
 
     } catch (error) {
       throw new BadRequestException(`Failed to delete file: ${error.message}`);

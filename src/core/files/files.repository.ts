@@ -14,6 +14,16 @@ export class FileRepository {
     });
   }
 
+    async findAllSoftDeletedByDeletedAt(deletedBefore: Date): Promise<File[]> {
+        return this.db.file.findMany({
+            where: {
+                deletedAt: { lt: deletedBefore },
+                isDefault: false,
+            },
+            orderBy: { deletedAt: 'desc' },
+        });
+    }
+
   async findById(id: number): Promise<File | null> {
     return this.db.file.findUnique({
       where: { id },
@@ -68,17 +78,6 @@ export class FileRepository {
   async count(id: number): Promise<number> {
     return this.db.file.count({
       where: { id },
-    });
-  }
-
-  async findFilesToCleanup(olderThan: Date): Promise<File[]> {
-    return this.db.file.findMany({
-      where: {
-        deletedAt: {
-          lt: olderThan,
-        },
-        isDefault: false,
-      },
     });
   }
 

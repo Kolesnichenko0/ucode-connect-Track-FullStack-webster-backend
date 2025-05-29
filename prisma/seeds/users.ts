@@ -48,7 +48,7 @@ export const createInitialUsers = async () => {
             const lastName = faker.person.lastName(gender ? 'male' : 'female');
             const id = index + 2;
             const profilePictureName = SEEDS.USERS.GENERATE_AVATARS ? await getRandomAvatar(id, gender) : SEEDS.USERS.AVATAR_MASK.replace('*', String(id));
-            
+
             return {
                 gender,
                 firstName,

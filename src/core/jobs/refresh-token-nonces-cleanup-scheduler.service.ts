@@ -12,21 +12,27 @@ export class RefreshTokenNoncesCleanupSchedulerService {
     constructor(
         private readonly refreshTokenNonceService: RefreshTokenNoncesService,
         private cs: ApiConfigService,
-    ) { }
+    ) {}
 
     @Cron(JobsConstants.REFRESH_TOKEN_NONCES_CLEANUP_FROM_DB)
     @Timeout(10000)
     async cleanupRefreshTokenNoncesFromDb() {
-        const expirationTime = convertToSeconds(this.cs.get('jwt.expiresIn.refresh'));
+        const expirationTimeInSeconds = convertToSeconds(
+            this.cs.get('jwt.expiresIn.refresh'),
+        );
+
+        const createdBefore = new Date();
+        createdBefore.setSeconds(createdBefore.getSeconds() - expirationTimeInSeconds);
+
         const nonces: RefreshTokenNonce[] =
-            await this.refreshTokenNonceService.findAll(expirationTime);
+            await this.refreshTokenNonceService.findAllExpiredByCreatedAt(
+                createdBefore,
+            );
 
         if (nonces.length > 0) {
             await Promise.all(
                 nonces.map((nonce) =>
-                    this.refreshTokenNonceService.deleteById(
-                        nonce.id,
-                    ),
+                    this.refreshTokenNonceService.deleteById(nonce.id),
                 ),
             );
         }

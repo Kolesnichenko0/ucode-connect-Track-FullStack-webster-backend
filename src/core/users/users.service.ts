@@ -45,8 +45,8 @@ export class UsersService {
         });
     }
 
-    async findAllUnactivated(time: number): Promise<User[]> {
-        const users = await this.usersRepository.findAllUnactivated(time);
+    async findAllUnactivatedByCreatedAt(createdBefore: Date): Promise<User[]> {
+        const users = await this.usersRepository.findAllUnactivatedByCreatedAt(createdBefore);
         return users.map((user) =>
             plainToInstance(User, user, {
                 groups: SERIALIZATION_GROUPS.PRIVATE,

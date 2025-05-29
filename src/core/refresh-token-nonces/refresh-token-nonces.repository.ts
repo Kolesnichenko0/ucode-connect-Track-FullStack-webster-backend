@@ -15,21 +15,11 @@ export class RefreshTokenNoncesRepository {
         });
     }
 
-    async findAll(seconds?: number): Promise<RefreshTokenNonce[]> {
-        const where: any = {};
-
-        if (seconds !== undefined) {
-            const thresholdDate = new Date();
-            thresholdDate.setSeconds(
-                thresholdDate.getSeconds() - Number(seconds),
-            );
-            where.createdAt = {
-                lt: thresholdDate,
-            };
-        }
-
+    async findAllExpiredByCreatedAt(createdBefore: Date): Promise<RefreshTokenNonce[]> {
         return this.db.refreshTokenNonce.findMany({
-            where,
+            where: {
+                createdAt: { lt: createdBefore },
+            },
             orderBy: { createdAt: 'desc' },
         });
     }

@@ -14,18 +14,16 @@ export class UsersRepository {
         });
     }
 
-    async findAllUnactivated(seconds?: number): Promise<User[]> {
-        const thresholdDate = new Date();
-        thresholdDate.setSeconds(thresholdDate.getSeconds() - Number(seconds));
-
+    async findAllUnactivatedByCreatedAt(createdBefore: Date): Promise<User[]> {
         return this.db.user.findMany({
             where: {
-                createdAt: { lt: thresholdDate },
+                createdAt: { lt: createdBefore },
                 isEmailVerified: false,
             },
             orderBy: { createdAt: 'desc' },
         });
     }
+
 
     async findAll(getUsersDto: GetUsersDto): Promise<User[]> {
         const whereOptions: Record<string, unknown> = {};

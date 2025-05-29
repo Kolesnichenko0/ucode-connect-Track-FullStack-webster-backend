@@ -16,8 +16,8 @@ export class RefreshTokenNoncesService {
         return await this.nonceRepository.create(createTokenDto);
     }
 
-    async findAll(time?: number): Promise<RefreshTokenNonce[]> {
-        return await this.nonceRepository.findAll(time);
+    async findAllExpiredByCreatedAt(createdBefore: Date): Promise<RefreshTokenNonce[]> {
+        return await this.nonceRepository.findAllExpiredByCreatedAt(createdBefore);
     }
 
     async findByNonceAndUserId(

@@ -8,6 +8,8 @@ import { JobsConstants } from './jobs.constants';
 
 @Injectable()
 export class SoftDeletedFilesCleanupSchedulerService {
+    private static readonly SOFT_DELETE_RETENTION_PERIOD_MILLISECONDS = 24 * 60 * 60 * 1000;
+
     constructor(
         private readonly filesService: FilesService,
         private readonly filePathService: FilePathService,
@@ -16,7 +18,9 @@ export class SoftDeletedFilesCleanupSchedulerService {
     @Cron(JobsConstants.SOFT_DELETED_FILES_CLEANUP_FROM_DB_AND_STORAGE)
     async cleanupSoftDeletedFilesFromDbAndStorage() {
         try {
-            const filesToDelete = await this.filesService.cleanupDeletedFiles();
+            const deletedBefore = new Date(Date.now() - SoftDeletedFilesCleanupSchedulerService.SOFT_DELETE_RETENTION_PERIOD_MILLISECONDS);
+
+            const filesToDelete = await this.filesService.findAllSoftDeletedByDeletedAt(deletedBefore);
 
             console.log(`Found ${filesToDelete.length} files to delete`);
 
