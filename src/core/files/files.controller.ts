@@ -8,6 +8,7 @@ import {
     HttpStatus,
     Res,
     BadRequestException,
+    ParseUUIDPipe,
 } from '@nestjs/common';
 import {
     ApiTags,
@@ -17,12 +18,10 @@ import {
 } from '@nestjs/swagger';
 import { Response as ExpressResponse } from 'express';
 import { StreamableFile } from '@nestjs/common';
-import { FileTargetType } from '@prisma/client';
 import { FilesService } from './files.service';
 import { FilePathsService } from './file-paths.service';
 import { FileOwnerGuard } from './guards/file-owner.guard';
 import { FileUploadService } from '../file-upload/file-upload.service';
-import { IsUuidParam } from '../../common/validators/uuid.validator';
 import {
     UPLOAD_CATEGORY_TO_TARGET_TYPE,
     TARGET_TYPE_TO_UPLOAD_CATEGORY,
@@ -44,7 +43,7 @@ export class FilesController {
     @ApiParam({
         name: 'fileKey',
         type: 'string',
-        description: 'Unique file key identifier',
+        description: 'Unique file key identifier (UUID v4)',
         example: 'a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6',
     })
     @ApiResponse({
@@ -138,8 +137,32 @@ export class FilesController {
             },
         },
     })
+    @ApiResponse({
+        status: HttpStatus.BAD_REQUEST,
+        description: 'Invalid UUID format',
+        schema: {
+            type: 'object',
+            properties: {
+                message: {
+                    type: 'string',
+                    description: 'Error message',
+                    example: 'Validation failed (uuid is expected)',
+                },
+                error: {
+                    type: 'string',
+                    description: 'Error type',
+                    example: 'Bad Request',
+                },
+                statusCode: {
+                    type: 'number',
+                    description: 'Status code',
+                    example: 400,
+                },
+            },
+        },
+    })
     async findByFileKey(
-        @Param('fileKey') fileKey: string,
+        @Param('fileKey', new ParseUUIDPipe({ version: '4' })) fileKey: string,
         @Res({ passthrough: true }) res: ExpressResponse,
     ): Promise<StreamableFile> {
         return this.filesService.getFileStreamByFileKey(fileKey, res);
@@ -151,7 +174,7 @@ export class FilesController {
     @ApiParam({
         name: 'fileKey',
         type: 'string',
-        description: 'Unique file key identifier',
+        description: 'Unique file key identifier (UUID v4)',
         example: 'a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6',
     })
     @ApiResponse({
@@ -235,7 +258,31 @@ export class FilesController {
             },
         },
     })
-    async deleteByFileKey(@Param('fileKey') fileKey: string): Promise<{ message: string }> {
+    @ApiResponse({
+        status: HttpStatus.BAD_REQUEST,
+        description: 'Invalid UUID format',
+        schema: {
+            type: 'object',
+            properties: {
+                message: {
+                    type: 'string',
+                    description: 'Error message',
+                    example: 'Validation failed (uuid is expected)',
+                },
+                error: {
+                    type: 'string',
+                    description: 'Error type',
+                    example: 'Bad Request',
+                },
+                statusCode: {
+                    type: 'number',
+                    description: 'Status code',
+                    example: 400,
+                },
+            },
+        },
+    })
+    async deleteByFileKey(@Param('fileKey', new ParseUUIDPipe({ version: '4' })) fileKey: string): Promise<{ message: string }> {
         await this.fileUploadService.delete(fileKey);
         return { message: 'File deleted successfully' };
     }
