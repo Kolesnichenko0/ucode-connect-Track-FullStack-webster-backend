@@ -14,6 +14,9 @@ import { FileUploadService } from 'src/core/file-upload/file-upload.service';
 import { FilePathsService } from 'src/core/files/file-paths.service';
 import { ConfigService } from '@nestjs/config';
 import { ApiConfigService } from 'src/config/api-config.service';
+import storageConfig from '../../src/config/configs/storage.config';
+import appConfig from '../../src/config/configs/app.config';
+import assetsConfig from '../../src/config/configs/assets.config';
 
 class Seeder {
     constructor(
@@ -21,6 +24,8 @@ class Seeder {
         private readonly usersService: UsersService,
         private readonly filesService: FilesService,
         private readonly filePathsService: FilePathsService,
+        private readonly configService: ConfigService,
+        private readonly apiConfigService: ApiConfigService
     ) {}
 
     async start() {
@@ -92,7 +97,13 @@ async function start() {
         const dbService = new DatabaseService();
         const hashingService = new HashingService();
         const passwordService = new HashingPasswordsService(hashingService);
-        const configService = new ConfigService();
+        const configService = new ConfigService(
+            {
+                ...storageConfig(),
+                ...appConfig(),
+                ...assetsConfig()
+            }
+        );
         const apiConfigService = new ApiConfigService(configService);
 
         const fileRepository = new FileRepository(dbService);
@@ -111,7 +122,9 @@ async function start() {
             dbService,
             userService,
             filesService,
-            filePathsService
+            filePathsService,
+            configService,
+            apiConfigService
         );
         await seeder.start();
     } catch (e) {
