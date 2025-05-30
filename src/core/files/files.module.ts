@@ -4,20 +4,17 @@ import { FilesService } from './files.service';
 import { DatabaseService } from '../db/database.service';
 import { FileRepository } from './files.repository';
 import { FilesController } from './files.controller';
-import { FilePathService } from './file-path.utils';
-import { UsersModule } from '../users/users.module';
+import { FilePathsService } from './file-paths.service';
+import { FileUploadModule } from '../file-upload/file-upload.module';
 
 @Module({
-  imports: [
-    forwardRef(() => UsersModule),
-  ],
-  controllers: [FilesController],
-  providers: [
-    FilesService,
-    FileRepository,
-    DatabaseService,
-    FilePathService,
-  ],
-  exports: [FilesService, FilePathService],
+    imports: [forwardRef(() => FileUploadModule)],
+    controllers: [FilesController],
+    providers: [
+        FilesService,
+        FileRepository,
+        FilePathsService,
+    ],
+    exports: [FilesService, FilePathsService],
 })
 export class FilesModule {}

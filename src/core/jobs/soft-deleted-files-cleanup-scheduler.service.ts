@@ -2,7 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { FilesService } from '../files/files.service';
-import { FilePathService } from '../files/file-path.utils';
+import { FilePathsService } from '../files/file-paths.service';
 import { promises as fs } from 'fs';
 import { JobsConstants } from './jobs.constants';
 
@@ -12,7 +12,7 @@ export class SoftDeletedFilesCleanupSchedulerService {
 
     constructor(
         private readonly filesService: FilesService,
-        private readonly filePathService: FilePathService,
+        private readonly filePathsService: FilePathsService,
     ) {}
 
     @Cron(JobsConstants.SOFT_DELETED_FILES_CLEANUP_FROM_DB_AND_STORAGE)
@@ -26,7 +26,7 @@ export class SoftDeletedFilesCleanupSchedulerService {
 
             for (const file of filesToDelete) {
                 try {
-                    const filePath = this.filePathService.getFilePath(file);
+                    const filePath = this.filePathsService.getFilePath(file);
 
                     await fs.unlink(filePath);
 

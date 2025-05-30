@@ -6,13 +6,13 @@ import { File, FileTargetType } from '@prisma/client';
 
 @Injectable()
 export class FileRepository {
-  constructor(private db: DatabaseService) {}
+    constructor(private db: DatabaseService) {}
 
-  async create(data: CreateFileDto): Promise<File> {
-    return this.db.file.create({
-      data,
-    });
-  }
+    async create(data: CreateFileDto): Promise<File> {
+        return this.db.file.create({
+            data,
+        });
+    }
 
     async findAllSoftDeletedByDeletedAt(deletedBefore: Date): Promise<File[]> {
         return this.db.file.findMany({
@@ -24,70 +24,111 @@ export class FileRepository {
         });
     }
 
-  async findById(id: number): Promise<File | null> {
-    return this.db.file.findUnique({
-      where: { id },
-    });
-  }
+    async findAllDefaultsByTargetType(
+        targetType: FileTargetType,
+        includeSoftDeleted: boolean = false,
+    ): Promise<File[]> {
+        return this.db.file.findMany({
+            where: {
+                targetType,
+                ...(includeSoftDeleted ? {} : { deletedAt: null }),
+                isDefault: true,
+            },
+        });
+    }
 
-  async findByAuthorId(fileId: number, authorId: number): Promise<File | null> {
-    return this.db.file.findUnique({
-      where: { id: fileId, authorId: authorId },
-    });
-  }
+    async findAllByTargetTypeAndTargetId(
+        targetType: FileTargetType,
+        targetId: number,
+        includeSoftDeleted: boolean = false,
+    ): Promise<File[]> {
+        return this.db.file.findMany({
+            where: {
+                targetType,
+                targetId,
+                ...(includeSoftDeleted ? {} : { deletedAt: null }),
+            },
+        });
+    }
 
-  async findByFileKey(fileKey: string): Promise<File | null> {
-    return this.db.file.findUnique({
-      where: { fileKey },
-    });
-  }
+    async findById(
+        id: number,
+        includeSoftDeleted: boolean = false,
+    ): Promise<File | null> {
+        return this.db.file.findUnique({
+            where: {
+                id,
+                ...(includeSoftDeleted ? {} : { deletedAt: null }),
+            },
+        });
+    }
 
-  async update(id: number, data: any): Promise<File> {
-    return this.db.file.update({
-      where: { id },
-      data,
-    });
-  }
+    async findByAuthorId(
+        fileId: number,
+        authorId: number,
+        includeSoftDeleted: boolean = false,
+    ): Promise<File | null> {
+        return this.db.file.findUnique({
+            where: {
+                id: fileId,
+                authorId: authorId,
+                ...(includeSoftDeleted ? {} : { deletedAt: null }),
+            },
+        });
+    }
 
-  async softDelete(id: number): Promise<File> {
-    return this.db.file.update({
-      where: { id },
-      data: {
-        deletedAt: new Date(),
-      },
-    });
-  }
+    async findByFileKey(
+        fileKey: string,
+        includeSoftDeleted: boolean = false,
+    ): Promise<File | null> {
+        return this.db.file.findUnique({
+            where: {
+                fileKey,
+                ...(includeSoftDeleted ? {} : { deletedAt: null }),
+            },
+        });
+    }
 
-  async softDeleteByFileKey(fileKey: string): Promise<File> {
-    return this.db.file.update({
-      where: { fileKey },
-      data: {
-        deletedAt: new Date(),
-      },
-    });
-  }
+    async update(id: number, data: any): Promise<File> {
+        return this.db.file.update({
+            where: { id },
+            data,
+        });
+    }
 
+    async softDelete(id: number): Promise<void> {
+        await this.db.file.update({
+            where: { id },
+            data: {
+                deletedAt: new Date(),
+            },
+        });
+    }
 
+    async softDeleteByFileKey(fileKey: string): Promise<void> {
+        await this.db.file.update({
+            where: { fileKey },
+            data: {
+                deletedAt: new Date(),
+            },
+        });
+    }
 
-  async hardDelete(id: number): Promise<void> {
-    await this.db.file.delete({
-      where: { id },
-    });
-  }
+    async hardDelete(id: number): Promise<void> {
+        await this.db.file.delete({
+            where: { id },
+        });
+    }
 
-  async count(id: number): Promise<number> {
-    return this.db.file.count({
-      where: { id },
-    });
-  }
-
-  async findDefaultByTargetType(targetType: FileTargetType): Promise<File[]> {
-    return this.db.file.findMany({
-      where: {
-        targetType,
-        deletedAt: null,
-        isDefault: true
-      },
-    });
-  }
+    async count(
+        id: number,
+        includeSoftDeleted: boolean = false,
+    ): Promise<number> {
+        return this.db.file.count({
+            where: {
+                id,
+                ...(includeSoftDeleted ? {} : { deletedAt: null }),
+            },
+        });
+    }
 }

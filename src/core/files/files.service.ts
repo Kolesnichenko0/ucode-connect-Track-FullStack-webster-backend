@@ -1,23 +1,19 @@
 // src/core/files/files.service.ts
-import {
-    Injectable,
-    NotFoundException,
-    ForbiddenException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { FileTargetType } from '@prisma/client';
 import { FileRepository } from './files.repository';
 import { CreateFileDto } from './dto/create-file.dto';
 import { File } from '@prisma/client';
 import { createReadStream } from 'fs';
 import { StreamableFile } from '@nestjs/common';
-import { FilePathService } from './file-path.utils';
+import { FilePathsService } from './file-paths.service';
 import { Response as ExpressResponse } from 'express';
 
 @Injectable()
 export class FilesService {
     constructor(
         private readonly fileRepository: FileRepository,
-        private readonly filePathService: FilePathService,
+        private readonly filePathsService: FilePathsService,
     ) {}
 
     async create(createFileDto: CreateFileDto): Promise<File> {
@@ -28,46 +24,78 @@ export class FilesService {
         return this.fileRepository.findAllSoftDeletedByDeletedAt(deletedBefore);
     }
 
-    async findById(id: number): Promise<File> {
-        const file = await this.fileRepository.findById(id);
+    async findAllDefaultsByTargetType(
+        targetType: FileTargetType,
+        includeSoftDeleted: boolean = false,
+    ): Promise<File[]> {
+        return this.fileRepository.findAllDefaultsByTargetType(
+            targetType,
+            includeSoftDeleted,
+        );
+    }
+
+    async findAllByTargetTypeAndTargetId(
+        targetType: FileTargetType,
+        targetId: number,
+        includeSoftDeleted: boolean = false,
+    ): Promise<File[]> {
+        return this.fileRepository.findAllByTargetTypeAndTargetId(
+            targetType,
+            targetId,
+            includeSoftDeleted,
+        );
+    }
+
+    async findById(
+        id: number,
+        includeSoftDeleted: boolean = false,
+    ): Promise<File> {
+        const file = await this.fileRepository.findById(id, includeSoftDeleted);
 
         if (!file) {
-            throw new NotFoundException(`File with ID ${id} not found`);
+            throw new NotFoundException(
+                `File with ID ${id} not found or deleted`,
+            );
         }
 
         return file;
     }
 
-    async findByFileKey(fileKey: string): Promise<File> {
-        const file = await this.fileRepository.findByFileKey(fileKey);
+    async findByFileKey(
+        fileKey: string,
+        includeSoftDeleted: boolean = false
+    ): Promise<File> {
+        const file = await this.fileRepository.findByFileKey(fileKey, includeSoftDeleted);
 
         if (!file) {
-            throw new NotFoundException(`File with key ${fileKey} not found`);
+            throw new NotFoundException(
+                `File with key ${fileKey} not found or deleted`,
+            );
         }
 
         return file;
     }
 
-    async softDelete(id: number): Promise<File> {
+    async softDelete(id: number): Promise<void> {
         await this.findById(id);
 
         return this.fileRepository.softDelete(id);
     }
 
-    async softDeleteByFileKey(fileKey: string): Promise<File> {
+    async softDeleteByFileKey(fileKey: string): Promise<void> {
         await this.findByFileKey(fileKey);
 
         return this.fileRepository.softDeleteByFileKey(fileKey);
     }
 
     async hardDelete(id: number): Promise<void> {
-        await this.findById(id);
+        await this.findById(id, true);
         await this.fileRepository.hardDelete(id);
     }
 
-    async getFileStreamByKey(
+    async getFileStreamByFileKey(
         fileKey: string,
-        res: ExpressResponse,
+        res: ExpressResponse
     ): Promise<StreamableFile> {
         const file = await this.findByFileKey(fileKey);
 
@@ -75,7 +103,7 @@ export class FilesService {
             throw new NotFoundException(`File with ${fileKey} not found!`);
         }
 
-        const filePath = this.filePathService.getFilePath(file);
+        const filePath = this.filePathsService.getFilePath(file);
         res.set({
             'Content-Type': file.mimeType,
             'Content-Disposition': `inline; filename="${file.fileKey}.${file.extension}"`,
@@ -86,9 +114,14 @@ export class FilesService {
 
     async getDefaultFileUrlsByTargetType(
         targetType: FileTargetType,
+        includeSoftDeleted: boolean = false,
     ): Promise<string[]> {
-        const files =
-            await this.fileRepository.findDefaultByTargetType(targetType);
-        return files.map((f) => this.filePathService.getFileUrl(f));
+        if (!this.filePathsService.isValidTargetType(targetType)) {
+            throw new BadRequestException(`Unsupported target type: ${targetType}`);
+        }
+        const files = await this.findAllDefaultsByTargetType(targetType, includeSoftDeleted);
+        return files.map((f) => this.filePathsService.getFileUrl(f));
     }
+
+    //TODO: Add restore functionality (not now)
 }

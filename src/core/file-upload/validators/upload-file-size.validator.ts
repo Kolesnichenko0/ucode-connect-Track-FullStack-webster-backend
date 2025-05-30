@@ -1,3 +1,4 @@
+// src/core/file-upload/validators/upload-file-size.validator.ts
 import { FileValidator, MaxFileSizeValidatorOptions } from '@nestjs/common';
 
 export class UploadFileSizeValidator extends FileValidator<
@@ -29,7 +30,7 @@ export class UploadFileSizeValidator extends FileValidator<
     else if (typeof file === 'object' && 'size' in file) {
       return this.validateFile(file as Express.Multer.File);
     }else if (typeof file === 'object') {
-      let isFilesValid = false; // Згідно з прикладом
+      let isFilesValid = false;
       for (const fileField in file) {
         if (Object.prototype.hasOwnProperty.call(file, fileField)) {
           const files = (file as Record<string, Express.Multer.File[]>)[

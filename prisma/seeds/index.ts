@@ -10,9 +10,8 @@ import { FileRepository } from '../../src/core/files/files.repository';
 import { FileTargetType } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
 import { FileUploadService } from 'src/core/file-upload/file-upload.service';
-import { FilePathService } from 'src/core/files/file-path.utils';
+import { FilePathsService } from 'src/core/files/file-paths.service';
 import { ConfigService } from '@nestjs/config';
 import { ApiConfigService } from 'src/config/api-config.service';
 
@@ -21,6 +20,7 @@ class Seeder {
         private readonly dbService: DatabaseService,
         private readonly usersService: UsersService,
         private readonly filesService: FilesService,
+        private readonly filePathsService: FilePathsService,
     ) {}
 
     async start() {
@@ -96,21 +96,22 @@ async function start() {
         const apiConfigService = new ApiConfigService(configService);
 
         const fileRepository = new FileRepository(dbService);
-        const filePathService = new FilePathService(configService);
-        const filesService = new FilesService(fileRepository, filePathService);
+        const filePathsService = new FilePathsService(apiConfigService);
+        const filesService = new FilesService(fileRepository, filePathsService);
 
         const userService = new UsersService(
             new UsersRepository(dbService),
             passwordService,
-            new FileUploadService(filesService, filePathService, apiConfigService),
+            new FileUploadService(filesService, filePathsService),
             filesService,
-            filePathService
+            filePathsService
         );
 
         const seeder = new Seeder(
             dbService,
             userService,
-            filesService
+            filesService,
+            filePathsService
         );
         await seeder.start();
     } catch (e) {

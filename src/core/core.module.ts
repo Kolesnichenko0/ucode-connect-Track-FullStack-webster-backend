@@ -9,14 +9,16 @@ import { RefreshTokenNoncesModule } from './refresh-token-nonces/refresh-token-n
 import { JobsModule } from './jobs/jobs.module';
 import { JwtModule } from './jwt/jwt.module';
 import { HashingModule } from './hashing/hashing.module';
+import { FilesModule } from './files/files.module';
+import { FileUploadModule } from './file-upload/file-upload.module';
 
 @Module({
     imports: [
         AuthModule,
         DatabaseModule,
         EmailModule,
-        // FilesModule,
-        // FileUploadModule,
+        FilesModule,
+        FileUploadModule,
         HashingModule,
         JobsModule,
         JwtModule,

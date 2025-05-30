@@ -17,7 +17,7 @@ import { FileTargetType } from '@prisma/client';
 import { UploadFileDto } from '../file-upload/dto/upload-file.dto';
 import { FileUploadService } from '../file-upload/file-upload.service';
 import { FilesService } from '../files/files.service';
-import { FilePathService } from '../files/file-path.utils';
+import { FilePathsService } from '../files/file-paths.service';
 
 @Injectable()
 export class UsersService {
@@ -29,7 +29,7 @@ export class UsersService {
         private readonly passwordService: HashingPasswordsService,
         private readonly fileUploadService: FileUploadService,
         private readonly filesService: FilesService,
-        private readonly filePathService: FilePathService
+        private readonly FilePathsService: FilePathsService
     ) { }
 
     async create(dto: CreateUserDto): Promise<User> {
@@ -85,7 +85,7 @@ export class UsersService {
 
         const fileAvatar = await this.filesService.findById(user.avatarFileId);
 
-        user.avatarURL = this.filePathService.getFileUrl(fileAvatar)
+        user.avatarURL = this.FilePathsService.getFileUrl(fileAvatar)
 
         return user;
     }

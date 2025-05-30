@@ -5,90 +5,77 @@ import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { FilesService } from '../files/files.service';
 import { UploadFileDto } from './dto/upload-file.dto';
-import { FilePathService } from '../files/file-path.utils';
-import { FileTargetType } from '@prisma/client';
-import { ApiConfigService } from 'src/config/api-config.service';
+import { FilePathsService } from '../files/file-paths.service';
 
 @Injectable()
 export class FileUploadService {
-  constructor(
-    private readonly filesService: FilesService,
-    private readonly filePathService: FilePathService,
-    private readonly cs: ApiConfigService
-  ) {
-  }
+    constructor(
+        private readonly filesService: FilesService,
+        private readonly filePathsService: FilePathsService,
+    ) {}
 
-  async upload(
-    file: Express.Multer.File,
-    fileMetadata: UploadFileDto
-  ): Promise<{ fileId: number; url: string }> {
-    const fileKey = uuidv4();
-    const fileExt = path.extname(file.originalname).slice(1);
-    const filename = `${fileKey}.${fileExt}`;
+    async upload(
+        file: Express.Multer.File,
+        fileMetadata: UploadFileDto,
+    ): Promise<{ fileId: number; url: string }> {
+        if (!this.filePathsService.isValidTargetType(fileMetadata.targetType)) {
+            throw new BadRequestException(
+                `Unsupported file target type: ${fileMetadata.targetType}`,
+            );
+        }
 
-    const targetDir = (()=> {
-      switch (fileMetadata.targetType) {
-        case FileTargetType.USER_AVATAR:
-          return this.cs.get('storage.paths.uploads.userAvatars')
-        case FileTargetType.PROJECT_ASSET:
-          return this.cs.get('storage.paths.uploads.projectAssets')
-        case FileTargetType.PROJECT_PREVIEW:
-          return this.cs.get('storage.paths.uploads.projectPreviews')
-        case FileTargetType.FONT_ASSET:
-          return this.cs.get('storage.paths.uploads.fontAssets')
-        default:
-          return this.cs.get('storage.paths.uploads.others')
-      }
-    }) ();
+        const fileKey = uuidv4();
+        const fileExt = path.extname(file.originalname).slice(1);
+        const filename = `${fileKey}.${fileExt}`;
 
-    const filePath = path.join(targetDir, filename);
+        const targetDir = this.filePathsService.getDirectoryPath(
+            fileMetadata.targetType,
+            false,
+        );
 
-    const savedFile = await this.filesService.create({
-      ...(fileMetadata.authorId && {authorId: fileMetadata.authorId}),
-      ...(fileMetadata.targetId && {authorId: fileMetadata.targetId}),
-      targetType: fileMetadata.targetType,
-      fileKey: fileKey,
-      mimeType: file.mimetype,
-      extension: fileExt,
-      isDefault: fileMetadata.isDefault,
-    });
+        const filePath = path.join(targetDir, filename);
 
-    await this.ensureDirectoryExists(targetDir);
-    await fs.writeFile(filePath, file.buffer);
+        const savedFile = await this.filesService.create({
+            ...(fileMetadata.authorId && { authorId: fileMetadata.authorId }),
+            ...(fileMetadata.targetId && { authorId: fileMetadata.targetId }),
+            targetType: fileMetadata.targetType,
+            fileKey: fileKey,
+            mimeType: file.mimetype,
+            extension: fileExt,
+            isDefault: fileMetadata.isDefault,
+        });
 
-    return {
-      fileId: savedFile.id,
-      url: this.filePathService.getFileUrl(savedFile),
-    };
-  }
+        await this.ensureDirectoryExists(targetDir);
+        await fs.writeFile(filePath, file.buffer);
 
-  async uploadMany(
-    files: Express.Multer.File[],
-    fileMetadata: UploadFileDto,
-  ): Promise<Array<{ fileId: number; url: string }>> {
-    return Promise.all(files.map(file => this.upload(file, fileMetadata)));
-  }
-
-  async delete(fileKey: string, targetType: string): Promise<void> {
-    try {
-      await this.filesService.softDeleteByFileKey(fileKey);
-
-    } catch (error) {
-      throw new BadRequestException(`Failed to delete file: ${error.message}`);
+        return {
+            fileId: savedFile.id,
+            url: this.filePathsService.getFileUrl(savedFile),
+        };
     }
-  }
 
-  async deleteMany(fileKeys: string[], targetType: string): Promise<void> {
-    await Promise.all(fileKeys.map(key => this.delete(key, targetType)));
-  }
-
-  private async ensureDirectoryExists(dirPath: string): Promise<void> {
-    try {
-      await fs.access(dirPath);
-    } catch {
-      await fs.mkdir(dirPath, { recursive: true });
+    async uploadMany(
+        files: Express.Multer.File[],
+        fileMetadata: UploadFileDto,
+    ): Promise<Array<{ fileId: number; url: string }>> {
+        return Promise.all(
+            files.map((file) => this.upload(file, fileMetadata)),
+        );
     }
-  }
 
+    async delete(fileKey: string): Promise<void> {
+        await this.filesService.softDeleteByFileKey(fileKey);
+    }
 
+    async deleteMany(fileKeys: string[]): Promise<void> {
+        await Promise.all(fileKeys.map((key) => this.delete(key)));
+    }
+
+    private async ensureDirectoryExists(dirPath: string): Promise<void> {
+        try {
+            await fs.access(dirPath);
+        } catch {
+            await fs.mkdir(dirPath, { recursive: true });
+        }
+    }
 }

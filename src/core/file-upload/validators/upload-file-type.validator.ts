@@ -1,5 +1,5 @@
+// src/core/file-upload/validators/upload-file-size.validator.ts
 import { FileValidator } from '@nestjs/common';
-// const fileType = require('file-type-mime'); //TODO: Посмотреть про эту библиотеку. Почему она не импортится. Может она старая? и нужно использовать более новую?
 import { fromBuffer } from 'file-type';
 import * as path from 'path';
 
@@ -73,7 +73,7 @@ export class UploadFileTypeValidator extends FileValidator<
     if (!this.allowedExtentions.includes(fileExt)) return false;
 
     const response = await fromBuffer(file.buffer);
-    
+
     if (!response) {
       return false;
     }

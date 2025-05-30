@@ -6,10 +6,11 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { ApiConfigService } from './config/api-config.service';
 import * as cookieParser from 'cookie-parser';
 import * as csurf from 'csurf';
-import { CsrfExceptionFilter } from './common/filters/csrf-exception.filter';
-import { CsrfError } from './common/filters/csrf-exception.filter';
+import { CsrfExceptionFilter } from './common/filters';
+import { CsrfError } from './common/filters';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { applySwaggerSecurity } from './common/enhancers/swagger-security.enhancer';
+import { applySwaggerSecurity } from './common/enhancers';
+import * as path from 'path';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -23,8 +24,15 @@ async function bootstrap() {
     const frontendOrigin = cs.get('app.clientUrl');
     const csrfConfig = cs.get('app.csrf');
     const corsConfig = cs.get('app.cors');
-    const logoFileName = cs.get('app.logo.filename');
-    const publicAssetsPath = cs.get('app.paths.basePublicAssets');
+    const publicAssetsPath = cs.get('assets.public.paths.base');
+    const projectPath = cs.get('assets.public.paths.logos');
+    const logoFilename = cs.get('assets.filenames.logo');
+    console.log(`${publicAssetsPath}`);
+    console.log(`${projectPath}`);
+    console.log(`${logoFilename}`);
+    console.log(cs.get('assets'));
+    console.log(cs.get('storage'));
+    const fullLogoPath = path.join(projectPath, logoFilename);
 
     app.useGlobalFilters(new CsrfExceptionFilter());
     app.setGlobalPrefix(globalPrefix);
@@ -111,7 +119,7 @@ async function bootstrap() {
             displayRequestDuration: true,
         },
         customSiteTitle: 'Uevent API',
-        customfavIcon: `${publicAssetsPath}/${logoFileName}`,
+        customfavIcon: `${fullLogoPath}`,
     });
 
     app.use(
