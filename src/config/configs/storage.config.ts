@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { ConfigValidator } from '../config.validator';
 import getAppConfig from './app.config';
 import { FileTargetType } from '@prisma/client';
-import { joinPath, normalizePath } from '../../common/utils';
+import { buildFilePath, buildUrl, normalizeFilePath } from '../../common/utils';
 
 const appConfig = getAppConfig();
 
@@ -41,8 +41,8 @@ const getStorageConfig = () => {
         StorageSchema,
     ) as z.infer<typeof StorageSchema>;
 
-    const baseStoragePath = normalizePath(config.STORAGE_BASE_PATH);
-    const baseUploadsLocalPath = joinPath('/', baseStoragePath, 'uploads');
+    const baseStoragePath = normalizeFilePath(config.STORAGE_BASE_PATH);
+    const baseUploadsLocalPath = buildFilePath(baseStoragePath, 'uploads');
 
     const categoryLocalPaths: {
         [K in keyof typeof STORAGE_UPLOAD_CATEGORIES]: string;
@@ -50,29 +50,18 @@ const getStorageConfig = () => {
 
     for (const key in STORAGE_UPLOAD_CATEGORIES) {
         const categoryKey = key as keyof typeof STORAGE_UPLOAD_CATEGORIES;
-        const relativePath = STORAGE_UPLOAD_CATEGORIES[categoryKey];
-        categoryLocalPaths[categoryKey] = joinPath(
-            '/',
-            baseUploadsLocalPath,
-            relativePath,
-        );
-    }
-
-    let tempServerUrl = appConfig.app.serverUrl;
-    if (tempServerUrl.endsWith('/')) {
-        tempServerUrl = tempServerUrl.slice(0, -1);
+        const relativePath = normalizeFilePath(STORAGE_UPLOAD_CATEGORIES[categoryKey]);
+        categoryLocalPaths[categoryKey] = buildFilePath(baseUploadsLocalPath, relativePath);
     }
 
     const urlPathSegments: string[] = [];
-    if (appConfig.app.globalPrefix && appConfig.app.globalPrefix !== '/') {
-        let prefix = appConfig.app.globalPrefix;
-        if (prefix.startsWith('/')) prefix = prefix.substring(1);
-        if (prefix.endsWith('/')) prefix = prefix.slice(0, -1);
-        if (prefix) urlPathSegments.push(prefix);
+    const prefix = appConfig.app.globalPrefix;
+    if (prefix && prefix !== '/') {
+        urlPathSegments.push(prefix);
     }
     urlPathSegments.push('files');
 
-    const filesServerUrl = `${tempServerUrl}/${urlPathSegments.join('/')}`;
+    const filesServerUrl = buildUrl(appConfig.app.serverUrl, ...urlPathSegments)
 
     return {
         storage: {

@@ -27,11 +27,6 @@ async function bootstrap() {
     const publicAssetsPath = cs.get('assets.public.paths.base');
     const projectPath = cs.get('assets.public.paths.logos');
     const logoFilename = cs.get('assets.filenames.logo');
-    console.log(`${publicAssetsPath}`);
-    console.log(`${projectPath}`);
-    console.log(`${logoFilename}`);
-    console.log(cs.get('assets'));
-    console.log(cs.get('storage'));
     const fullLogoPath = path.join(projectPath, logoFilename);
 
     app.useGlobalFilters(new CsrfExceptionFilter());

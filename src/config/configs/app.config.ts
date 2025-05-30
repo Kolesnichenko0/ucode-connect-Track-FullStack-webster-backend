@@ -2,6 +2,7 @@
 import { z } from 'zod';
 import { ConfigValidator } from '../config.validator';
 import { Env } from '../config.interface';
+import { buildBaseUrl } from '../../common/utils';
 
 const AppSchema = z.object({
     APP_NAME: z.string().default('webster'),
@@ -35,29 +36,17 @@ const AppSchema = z.object({
 
 export type IAppConfig = ReturnType<typeof getAppConfig>;
 
-const buildUrl = (protocol: string, host: string, port: number): string => {
-    let constructedUrl = `${protocol}://${host}`;
-    const isStandardPort =
-        (protocol === 'http' && port === 80) ||
-        (protocol === 'https' && port === 443);
-
-    if (port && !isStandardPort) {
-        constructedUrl += `:${port}`;
-    }
-    return constructedUrl;
-};
-
 const getAppConfig = () => {
     const config = ConfigValidator.validate(process.env, AppSchema) as z.infer<
         typeof AppSchema
     >;
 
-    const serverUrl = buildUrl(
+    const serverUrl = buildBaseUrl(
         config.APP_SERVER_PROTOCOL,
         config.APP_SERVER_HOST,
         config.APP_SERVER_PORT,
     );
-    const clientUrl = buildUrl(
+    const clientUrl = buildBaseUrl(
         config.APP_CLIENT_PROTOCOL,
         config.APP_CLIENT_HOST,
         config.APP_CLIENT_PORT,

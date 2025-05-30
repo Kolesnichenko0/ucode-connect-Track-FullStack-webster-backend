@@ -1,11 +1,14 @@
 // src/core/file-upload/file-upload.service.ts
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { promises as fs } from 'fs';
-import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
 import { FilesService } from '../files/files.service';
 import { UploadFileDto } from './dto/upload-file.dto';
 import { FilePathsService } from '../files/file-paths.service';
+import {
+    ensureDirectoryExists,
+    getFileExtension,
+    buildFilePath, generateFileKey,
+} from '../../common/utils';
 
 @Injectable()
 export class FileUploadService {
@@ -24,8 +27,8 @@ export class FileUploadService {
             );
         }
 
-        const fileKey = uuidv4();
-        const fileExt = path.extname(file.originalname).slice(1);
+        const fileKey = generateFileKey();
+        const fileExt = getFileExtension(file.originalname);
         const filename = `${fileKey}.${fileExt}`;
 
         const targetDir = this.filePathsService.getDirectoryPath(
@@ -33,7 +36,7 @@ export class FileUploadService {
             false,
         );
 
-        const filePath = path.join(targetDir, filename);
+        const filePath = buildFilePath(targetDir, filename);
 
         const savedFile = await this.filesService.create({
             ...(fileMetadata.authorId && { authorId: fileMetadata.authorId }),
@@ -45,7 +48,7 @@ export class FileUploadService {
             isDefault: fileMetadata.isDefault,
         });
 
-        await this.ensureDirectoryExists(targetDir);
+        await ensureDirectoryExists(targetDir);
         await fs.writeFile(filePath, file.buffer);
 
         return {
@@ -69,13 +72,5 @@ export class FileUploadService {
 
     async deleteMany(fileKeys: string[]): Promise<void> {
         await Promise.all(fileKeys.map((key) => this.delete(key)));
-    }
-
-    private async ensureDirectoryExists(dirPath: string): Promise<void> {
-        try {
-            await fs.access(dirPath);
-        } catch {
-            await fs.mkdir(dirPath, { recursive: true });
-        }
     }
 }

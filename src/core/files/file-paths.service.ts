@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { FileTargetType } from '@prisma/client';
 import { ApiConfigService } from 'src/config/api-config.service';
 import { File } from './entities/file.entity';
-import * as path from 'path';
+import { buildFilePath, buildUrl } from '../../common/utils';
 
 interface FileTypeConfig {
     storagePath: string;
@@ -85,8 +85,7 @@ export class FilePathsService {
 
     getFilePath(file: File): string {
         const directoryPath = this.getDirectoryPath(file.targetType, file.isDefault);
-
-        return path.join(directoryPath, `${file.fileKey}.${file.extension}`);
+        return buildFilePath(directoryPath, `${file.fileKey}.${file.extension}`);
     }
 
     getFileUrl(file: File): string {
@@ -101,9 +100,9 @@ export class FilePathsService {
             if (!config.assetServerUrl) {
                 throw new Error(`No asset server URL configuration for file type: ${file.targetType}`);
             }
-            return `${config.assetServerUrl}/${filename}`;
+            return buildUrl(config.assetServerUrl, filename);
         } else {
-            return `${this.storageFilesServerUrl}/${filename}`;
+            return buildUrl(this.storageFilesServerUrl, filename);
         }
     }
 
