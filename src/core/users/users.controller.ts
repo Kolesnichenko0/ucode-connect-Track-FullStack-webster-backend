@@ -325,22 +325,8 @@ export class UsersController {
     })
     @ApiResponse({
         status: HttpStatus.OK,
-        description: 'Avatar successfully uploaded',
-        schema: {
-            type: 'object',
-            properties: {
-                server_filename: {
-                    type: 'string',
-                    description: 'Filename for the uploaded avatar',
-                    example: 'avatar.png',
-                },
-                fileKey: {
-                    type: 'string',
-                    description: 'Unique file key for the uploaded avatar',
-                    example: 'a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6',
-                },
-            },
-        },
+        type: User,
+        description: 'Successfully retrieved user profile',
     })
     @ApiResponse({
         status: HttpStatus.BAD_REQUEST,

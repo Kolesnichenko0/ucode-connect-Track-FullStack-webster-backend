@@ -45,6 +45,11 @@ In the examples of all commands in the text `<env>` is the name of the environme
    ```bash
    npm run migrate:dev
    ```
+   **Note:**  Alternatively, you can run:
+    ```bash
+    npm run migrate:reset:dev
+    ```
+   to reset the database and apply all migrations. If you use this command, you can skip steps 6-8.
 6. Run command to create prisma client:
    ```bash
    npm run migrate:generate:dev
