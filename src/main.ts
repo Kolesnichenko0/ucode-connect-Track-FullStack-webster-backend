@@ -11,6 +11,7 @@ import { CsrfError } from './common/filters';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { applySwaggerSecurity } from './common/enhancers';
 import * as path from 'path';
+import { buildUrl } from './common/utils';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -134,7 +135,7 @@ async function bootstrap() {
     await app.listen(serverPort);
 
     console.log(`\n✔ Application is running on: ${serverBaseUrl}`);
-    console.log(`\n✔ API Docs is available on: ${serverBaseUrl}/${globalPrefix}\n`);
+    console.log(`\n✔ API Docs is available on: ${buildUrl(serverBaseUrl, globalPrefix)}\n`);
 }
 
 bootstrap();

@@ -1,5 +1,9 @@
 // src/core/files/files.service.ts
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+    BadRequestException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common';
 import { FileTargetType } from '@prisma/client';
 import { FileRepository } from './files.repository';
 import { CreateFileDto } from './dto/create-file.dto';
@@ -46,6 +50,13 @@ export class FilesService {
         );
     }
 
+    async findAllByAuthorId(
+        authorId: number,
+        includeSoftDeleted: boolean = false,
+    ): Promise<File[]> {
+        return this.fileRepository.findAllByAuthorId(authorId, includeSoftDeleted);
+    }
+
     async findById(
         id: number,
         includeSoftDeleted: boolean = false,
@@ -63,9 +74,12 @@ export class FilesService {
 
     async findByFileKey(
         fileKey: string,
-        includeSoftDeleted: boolean = false
+        includeSoftDeleted: boolean = false,
     ): Promise<File> {
-        const file = await this.fileRepository.findByFileKey(fileKey, includeSoftDeleted);
+        const file = await this.fileRepository.findByFileKey(
+            fileKey,
+            includeSoftDeleted,
+        );
 
         if (!file) {
             throw new NotFoundException(
@@ -82,6 +96,18 @@ export class FilesService {
         return this.fileRepository.softDelete(id);
     }
 
+    async softDeleteMany(ids: number[]): Promise<void> {
+        if (ids.length === 0) {
+            throw new NotFoundException('No files found for the provided IDs');
+        }
+
+        await Promise.all(
+            ids.map((id) => this.findById(id)),
+        );
+
+        return this.fileRepository.softDeleteMany(ids);
+    }
+
     async softDeleteByFileKey(fileKey: string): Promise<void> {
         await this.findByFileKey(fileKey);
 
@@ -95,7 +121,7 @@ export class FilesService {
 
     async getFileStreamByFileKey(
         fileKey: string,
-        res: ExpressResponse
+        res: ExpressResponse,
     ): Promise<StreamableFile> {
         const file = await this.findByFileKey(fileKey);
 
@@ -117,9 +143,14 @@ export class FilesService {
         includeSoftDeleted: boolean = false,
     ): Promise<string[]> {
         if (!this.filePathsService.isValidTargetType(targetType)) {
-            throw new BadRequestException(`Unsupported target type: ${targetType}`);
+            throw new BadRequestException(
+                `Unsupported target type: ${targetType}`,
+            );
         }
-        const files = await this.findAllDefaultsByTargetType(targetType, includeSoftDeleted);
+        const files = await this.findAllDefaultsByTargetType(
+            targetType,
+            includeSoftDeleted,
+        );
         return files.map((f) => this.filePathsService.getFileUrl(f));
     }
 

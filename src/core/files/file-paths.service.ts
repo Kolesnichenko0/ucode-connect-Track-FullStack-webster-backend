@@ -4,6 +4,7 @@ import { FileTargetType } from '@prisma/client';
 import { ApiConfigService } from 'src/config/api-config.service';
 import { File } from './entities/file.entity';
 import { buildFilePath, buildUrl } from '../../common/utils';
+import { FilesService } from './files.service';
 
 interface FileTypeConfig {
     storagePath: string;
@@ -41,7 +42,9 @@ export class FilePathsService {
     private fileConfigs: Record<FileTargetType, FileTypeConfig>;
     private storageFilesServerUrl: string;
 
-    constructor(private readonly cs: ApiConfigService) {
+    constructor(
+        private readonly cs: ApiConfigService,
+    ) {
         this.initializeConfig();
     }
 
@@ -67,7 +70,10 @@ export class FilePathsService {
         });
     }
 
-    getDirectoryPath(targetType: FileTargetType, isDefault: boolean = false): string {
+    getDirectoryPath(
+        targetType: FileTargetType,
+        isDefault: boolean = false,
+    ): string {
         const config = this.fileConfigs[targetType];
         if (!config) {
             throw new Error(`Unsupported file target type: ${targetType}`);
@@ -75,7 +81,9 @@ export class FilePathsService {
 
         if (isDefault) {
             if (!config.assetPath) {
-                throw new Error(`No asset path configuration for file type: ${targetType}`);
+                throw new Error(
+                    `No asset path configuration for file type: ${targetType}`,
+                );
             }
             return config.assetPath;
         }
@@ -84,21 +92,31 @@ export class FilePathsService {
     }
 
     getFilePath(file: File): string {
-        const directoryPath = this.getDirectoryPath(file.targetType, file.isDefault);
-        return buildFilePath(directoryPath, `${file.fileKey}.${file.extension}`);
+        const directoryPath = this.getDirectoryPath(
+            file.targetType,
+            file.isDefault,
+        );
+        return buildFilePath(
+            directoryPath,
+            `${file.fileKey}.${file.extension}`,
+        );
     }
 
     getFileUrl(file: File): string {
         const config = this.fileConfigs[file.targetType];
         if (!config) {
-            throw new Error(`Unsupported file target type for URL: ${file.targetType}`);
+            throw new Error(
+                `Unsupported file target type for URL: ${file.targetType}`,
+            );
         }
 
         const filename = `${file.fileKey}.${file.extension}`;
 
         if (file.isDefault) {
             if (!config.assetServerUrl) {
-                throw new Error(`No asset server URL configuration for file type: ${file.targetType}`);
+                throw new Error(
+                    `No asset server URL configuration for file type: ${file.targetType}`,
+                );
             }
             return buildUrl(config.assetServerUrl, filename);
         } else {
@@ -120,6 +138,8 @@ export class FilePathsService {
     }
 
     getTargetTypesWithDefaultSupport(): FileTargetType[] {
-        return this.getSupportedTargetTypes().filter(type => this.isSupportedDefaultFiles(type));
+        return this.getSupportedTargetTypes().filter((type) =>
+            this.isSupportedDefaultFiles(type),
+        );
     }
 }

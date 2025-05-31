@@ -17,6 +17,7 @@ import { ApiConfigService } from 'src/config/api-config.service';
 import storageConfig from '../../src/config/configs/storage.config';
 import appConfig from '../../src/config/configs/app.config';
 import assetsConfig from '../../src/config/configs/assets.config';
+import { setFilePathsService, setFilesService } from '../../src/core/users/entities/user.entity';
 
 class Seeder {
     constructor(
@@ -117,6 +118,9 @@ async function start() {
             filesService,
             filePathsService
         );
+
+        setFilesService(filesService);
+        setFilePathsService(filePathsService);
 
         const seeder = new Seeder(
             dbService,

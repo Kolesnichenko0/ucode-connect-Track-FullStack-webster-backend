@@ -2,9 +2,25 @@
 import {
     User as PrismaUser,
     RefreshTokenNonce as PrismaRefreshTokenNonce,
+    File as PrismaFile,
+    FileTargetType,
 } from '@prisma/client';
-import { Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 import { ApiProperty, PickType } from '@nestjs/swagger';
+import { FilePathsService } from '../../files/file-paths.service';
+import { File } from 'src/core/files/entities/file.entity';
+import { FilesService } from '../../files/files.service';
+
+let filePathsServiceInstance: FilePathsService;
+let filesServiceInstance: any;
+
+export const setFilePathsService = (service: FilePathsService) => {
+    filePathsServiceInstance = service;
+};
+
+export const setFilesService = (service: FilesService) => {
+    filesServiceInstance = service;
+}
 
 export const SERIALIZATION_GROUPS = {
     BASIC: ['basic'],
@@ -13,7 +29,6 @@ export const SERIALIZATION_GROUPS = {
 };
 
 export class User implements PrismaUser {
-   
     @Expose({ groups: ['basic'] })
     @ApiProperty({
         description: 'User identifier',
@@ -53,7 +68,7 @@ export class User implements PrismaUser {
     })
     email: string;
 
-    @Expose({ groups: ['basic'] })
+    @Expose({ groups: ['private'] })
     @ApiProperty({
         description: 'Profile file ID',
         nullable: false,
@@ -80,8 +95,39 @@ export class User implements PrismaUser {
     @Expose({ groups: ['private'] })
     refreshTokenNonces?: PrismaRefreshTokenNonce[];
 
-    @Expose({ groups: ['basic'] })//TODO: Тут нужно может трансформом задавать url?!
-    avatarURL?: string;
+    @Expose({ groups: ['private'] })
+    avatarFile?: PrismaFile;
+
+    @Expose({ groups: ['basic'] })
+    @ApiProperty({
+        description: 'URL of user avatar',
+        nullable: true,
+        type: 'string',
+        example: 'https://example.com/assets/user-avatars/abc123.jpg',
+    })
+    @Transform(({ obj }) => {
+        try {
+            if (!filePathsServiceInstance || !obj.avatarFileId) {
+                throw new Error('FilePathsService instance is not set');
+            }
+
+            let avatarFile: File;
+            if (obj.avatarFile) {
+                avatarFile = obj.avatarFile;
+            } else {
+                if (!filesServiceInstance) {
+                    throw new Error('FilesService instance is not set');
+                }
+                avatarFile = filesServiceInstance.findById(obj.avatarFileId);
+            }
+
+            return filePathsServiceInstance.getFileUrl(avatarFile);
+        } catch (error) {
+            console.error('Error generating avatar URL:', error);
+            return undefined;
+        }
+    })
+    avatarFileURL?: string;
 }
 
 export class UserWithBasic extends PickType(User, [
@@ -90,5 +136,6 @@ export class UserWithBasic extends PickType(User, [
     'lastName',
     'email',
     'avatarFileId',
-    'createdAt'
-] as const) { }
+    'avatarFileURL',
+    'createdAt',
+] as const) {}

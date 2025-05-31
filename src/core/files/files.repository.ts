@@ -51,6 +51,19 @@ export class FileRepository {
         });
     }
 
+    async findAllByAuthorId(
+        authorId: number,
+        includeSoftDeleted: boolean = false,
+    ): Promise<File[]> {
+        return this.db.file.findMany({
+            where: {
+                authorId,
+                ...(includeSoftDeleted ? {} : { deletedAt: null }),
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+
     async findById(
         id: number,
         includeSoftDeleted: boolean = false,
@@ -58,20 +71,6 @@ export class FileRepository {
         return this.db.file.findUnique({
             where: {
                 id,
-                ...(includeSoftDeleted ? {} : { deletedAt: null }),
-            },
-        });
-    }
-
-    async findByAuthorId(
-        fileId: number,
-        authorId: number,
-        includeSoftDeleted: boolean = false,
-    ): Promise<File | null> {
-        return this.db.file.findUnique({
-            where: {
-                id: fileId,
-                authorId: authorId,
                 ...(includeSoftDeleted ? {} : { deletedAt: null }),
             },
         });
@@ -99,6 +98,17 @@ export class FileRepository {
     async softDelete(id: number): Promise<void> {
         await this.db.file.update({
             where: { id },
+            data: {
+                deletedAt: new Date(),
+            },
+        });
+    }
+
+    async softDeleteMany(ids: number[]): Promise<void> {
+        await this.db.file.updateMany({
+            where: {
+                id: { in: ids },
+            },
             data: {
                 deletedAt: new Date(),
             },

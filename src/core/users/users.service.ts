@@ -1,14 +1,20 @@
 // src/core/users/users.service.ts
 import {
     ConflictException,
+    ImATeapotException,
     Injectable,
     NotFoundException,
+    OnModuleInit,
     UnauthorizedException,
 } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { SERIALIZATION_GROUPS, User } from './entities/user.entity';
+import {
+    SERIALIZATION_GROUPS,
+    setFilePathsService, setFilesService,
+    User,
+} from './entities/user.entity';
 import { HashingPasswordsService } from './hashing-passwords.service';
 import { plainToInstance } from 'class-transformer';
 import { UpdateUserPasswordDto } from './dto/update-user-password.dto';
@@ -20,7 +26,7 @@ import { FilesService } from '../files/files.service';
 import { FilePathsService } from '../files/file-paths.service';
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
 
     private readonly TARGET_TYPE = FileTargetType.USER_AVATAR;
 
@@ -32,13 +38,24 @@ export class UsersService {
         private readonly FilePathsService: FilePathsService
     ) { }
 
+    onModuleInit() {
+        setFilePathsService(this.FilePathsService);
+        setFilesService(this.filesService);
+    }
+
     async create(dto: CreateUserDto): Promise<User> {
         const existing = await this.usersRepository.findByEmail(dto.email);
         if (existing) {
             throw new ConflictException('Email already in use');
         }
         dto.password = await this.passwordService.hash(dto.password);
-        const result = await this.usersRepository.create({...dto, avatarFileId: 1});
+        const avatarFile = await this.filesService.findAllDefaultsByTargetType(FileTargetType.USER_AVATAR);
+
+        if (!avatarFile || avatarFile.length === 0) {
+            throw new ImATeapotException('Default avatar file not found');
+        }
+
+        const result = await this.usersRepository.create({...dto, avatarFileId: avatarFile[0].id});
 
         return plainToInstance(User, result, {
             groups: SERIALIZATION_GROUPS.CONFIDENTIAL,
@@ -81,13 +98,11 @@ export class UsersService {
     }
 
     async findByIdWithConfidential(id: number): Promise<User> {
-        const user: User = await this.findById(id, SERIALIZATION_GROUPS.CONFIDENTIAL)
+        // const fileAvatar = await this.filesService.findById(user.avatarFileId);
 
-        const fileAvatar = await this.filesService.findById(user.avatarFileId);
+        // user.avatarFileURL = this.FilePathsService.getFileUrl(fileAvatar)
 
-        user.avatarURL = this.FilePathsService.getFileUrl(fileAvatar)
-
-        return user;
+        return await this.findById(id, SERIALIZATION_GROUPS.CONFIDENTIAL);
     }
 
     async findByEmail(email: string): Promise<User> {
@@ -173,19 +188,17 @@ export class UsersService {
             throw new NotFoundException('User not found');
         }
 
-        const oldAvatar = await this.filesService.findById(user.avatarFileId);
-
-        if (!oldAvatar.isDefault) {
+        if (user.avatarFile && !user.avatarFile.isDefault) {
             await this.filesService.softDelete(user.avatarFileId);
         }
 
-        const userInstance: User = plainToInstance(User, result, {
+        return plainToInstance(User, result, {
             groups: SERIALIZATION_GROUPS.CONFIDENTIAL,
         });
 
-        userInstance.avatarURL = fileUploadResult.url;
-
-        return userInstance;
+        // userInstance.avatarFileURL = fileUploadResult.url;
+        //
+        // return userInstance;
     }
 
     async resetPassword(id: number, newPassword: string): Promise<User> {
@@ -209,6 +222,27 @@ export class UsersService {
     }
 
     async delete(id: number): Promise<void> {
+        const user = await this.findById(id);
+
+        if (user.avatarFile && !user.avatarFile.isDefault) {
+            await this.filesService.softDelete(user.avatarFileId);
+        }
+
+        const userFiles = await this.filesService.findAllByAuthorId(id);
+
+        if (userFiles.length > 0) {
+            await this.filesService.softDeleteMany(userFiles.map(file => file.id));
+        }
+
+        //TODO: Delete all user projects/fonts (not now)
+
         await this.usersRepository.delete(id);
     }
 }
+
+
+
+
+
+
+

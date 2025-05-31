@@ -39,14 +39,14 @@ export class UsersRepository {
     async findById(id: number): Promise<User | null> {
         return this.db.user.findUnique({
             where: { id },
-            include: { refreshTokenNonces: true },
+            include: { refreshTokenNonces: true, avatarFile: true },
         });
     }
 
     async findByEmail(email: string): Promise<User | null> {
         return this.db.user.findUnique({
             where: { email },
-            include: { refreshTokenNonces: true },
+            include: { refreshTokenNonces: true, avatarFile: true },
         });
     }
 

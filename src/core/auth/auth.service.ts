@@ -14,7 +14,7 @@ import { UsersService } from 'src/core/users/users.service';
 import { RefreshTokenNoncesService } from 'src/core/refresh-token-nonces/refresh-token-nonces.service';
 import { JwtTokensService } from '../jwt/jwt-tokens.service';
 import { HashingPasswordsService } from '../users/hashing-passwords.service';
-import { convertToSeconds } from '../../common/utils/time.utils';
+import { convertToSeconds, buildUrl } from '../../common/utils';
 import { EmailService } from 'src/core/email/email.service';
 import { generateNonce } from 'src/common/utils/nonce.utils';
 import { User } from '../users/entities/user.entity';
@@ -46,7 +46,7 @@ export class AuthService {
             { sub: user.id },
             'confirmEmail',
         );
-        const link = this.clientUrl + 'auth/confirm-email/' + result;
+        const link = buildUrl(this.clientUrl, '/auth/confirm-email/', result);
         this.emailService.sendConfirmationEmail(
             user.email,
             link,
@@ -163,8 +163,7 @@ export class AuthService {
             'resetPassword',
         );
 
-        const link =
-            this.clientUrl + 'auth/reset-password/' + passwordResetToken;
+        const link = buildUrl(this.clientUrl, '/auth/reset-password/', passwordResetToken);
 
         this.emailService.sendResetPasswordEmail(
             user.email,
