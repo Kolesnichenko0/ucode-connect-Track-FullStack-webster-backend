@@ -7,7 +7,8 @@ import { buildFilePath, normalizeFilePath, buildUrl } from '../../common/utils';
 const appConfig = getAppConfig();
 
 const AssetsSchema = z.object({
-    ASSETS_BASE_PUBLIC_PATH: z.string().default('./public/assets'),
+    ASSETS_PUBLIC_PATH: z.string().default('public'),
+    ASSETS_BASE_PATH: z.string().default('assets'),
     ASSETS_LOGO_FILENAME: z.string().default('logo.png'),
 });
 
@@ -20,15 +21,25 @@ const ASSET_CATEGORIES = {
 };
 
 const getAssetsConfig = () => {
-    const config = ConfigValidator.validate(process.env, AssetsSchema) as z.infer<typeof AssetsSchema>;
+    const config = ConfigValidator.validate(
+        process.env,
+        AssetsSchema,
+    ) as z.infer<typeof AssetsSchema>;
 
     const serverUrl = appConfig.app.serverUrl;
 
-    const basePublicAssetsPath = normalizeFilePath(config.ASSETS_BASE_PUBLIC_PATH);
-    const basePublicAssetsServerUrl = buildUrl(serverUrl, basePublicAssetsPath);
+    const baseAssetsPath = normalizeFilePath(config.ASSETS_BASE_PATH);
+    const basePublicAssetsPath = buildFilePath(
+        normalizeFilePath(config.ASSETS_PUBLIC_PATH),
+        baseAssetsPath,
+    )
+    const baseAssetsServerUrl = buildUrl(serverUrl, baseAssetsPath);
 
-    const publicAssetsPaths: { [K in keyof typeof ASSET_CATEGORIES]: string } = {} as any;
-    const publicAssetsServerUrls: { [K in keyof typeof ASSET_CATEGORIES]: string } = {} as any;
+    const publicAssetsPaths: { [K in keyof typeof ASSET_CATEGORIES]: string } =
+        {} as any;
+    const assetsServerUrls: {
+        [K in keyof typeof ASSET_CATEGORIES]: string;
+    } = {} as any;
 
     for (const key in ASSET_CATEGORIES) {
         const categoryKey = key as keyof typeof ASSET_CATEGORIES;
@@ -36,27 +47,28 @@ const getAssetsConfig = () => {
 
         publicAssetsPaths[categoryKey] = buildFilePath(
             basePublicAssetsPath,
-            relativePath
+            relativePath,
         );
 
-        publicAssetsServerUrls[categoryKey] = buildUrl(basePublicAssetsServerUrl, relativePath);
+        assetsServerUrls[categoryKey] = buildUrl(
+            baseAssetsServerUrl,
+            relativePath,
+        );
     }
 
     return {
         assets: {
+            publicPath: config.ASSETS_PUBLIC_PATH,
             filenames: {
                 logo: config.ASSETS_LOGO_FILENAME,
             },
-
-            public: {
-                paths: {
-                    base: basePublicAssetsPath,
-                    ...publicAssetsPaths,
-                },
-                serverUrls: {
-                    base: basePublicAssetsServerUrl,
-                    ...publicAssetsServerUrls,
-                },
+            paths: {
+                base: basePublicAssetsPath,
+                ...publicAssetsPaths,
+            },
+            serverUrls: {
+                base: baseAssetsServerUrl,
+                ...assetsServerUrls,
             },
         },
     };

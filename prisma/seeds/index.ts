@@ -17,7 +17,7 @@ import { ApiConfigService } from 'src/config/api-config.service';
 import storageConfig from '../../src/config/configs/storage.config';
 import appConfig from '../../src/config/configs/app.config';
 import assetsConfig from '../../src/config/configs/assets.config';
-import { setFilePathsService, setFilesService } from '../../src/core/users/entities/user.entity';
+import { FileUrlTransformerService } from '../../src/core/files/file-url-transformer.service';
 
 class Seeder {
     constructor(
@@ -26,7 +26,7 @@ class Seeder {
         private readonly filesService: FilesService,
         private readonly filePathsService: FilePathsService,
         private readonly configService: ConfigService,
-        private readonly apiConfigService: ApiConfigService
+        private readonly apiConfigService: ApiConfigService,
     ) {}
 
     async start() {
@@ -110,17 +110,15 @@ async function start() {
         const fileRepository = new FileRepository(dbService);
         const filePathsService = new FilePathsService(apiConfigService);
         const filesService = new FilesService(fileRepository, filePathsService);
+        const fileUrlTransformerService = new FileUrlTransformerService(filePathsService, filesService);
 
         const userService = new UsersService(
             new UsersRepository(dbService),
             passwordService,
             new FileUploadService(filesService, filePathsService),
             filesService,
-            filePathsService
+            fileUrlTransformerService
         );
-
-        setFilesService(filesService);
-        setFilePathsService(filePathsService);
 
         const seeder = new Seeder(
             dbService,

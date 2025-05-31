@@ -67,7 +67,7 @@ export class FileUploadService {
     }
 
     async delete(fileKey: string): Promise<void> {
-        await this.filesService.softDeleteByFileKey(fileKey);
+        await this.filesService.softDeleteByFileKeyWithTargetType(fileKey);
     }
 
     async deleteMany(fileKeys: string[]): Promise<void> {

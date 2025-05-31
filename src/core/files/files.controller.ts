@@ -25,8 +25,9 @@ import { FileUploadService } from '../file-upload/file-upload.service';
 import {
     UPLOAD_CATEGORY_TO_TARGET_TYPE,
     TARGET_TYPE_TO_UPLOAD_CATEGORY,
-    STORAGE_UPLOAD_CATEGORIES
+    STORAGE_UPLOAD_CATEGORIES,
 } from '../../config/configs/storage.config';
+import { Public } from 'src/common/decorators';
 
 @Controller('files')
 @ApiTags('Files')
@@ -288,6 +289,7 @@ export class FilesController {
     }
 
     @Get('default/:targetType')
+    @Public()
     @ApiOperation({ summary: 'Get default file URLs by target type' })
     @ApiParam({
         name: 'targetType',

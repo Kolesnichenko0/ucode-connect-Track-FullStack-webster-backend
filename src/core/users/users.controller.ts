@@ -12,6 +12,7 @@ import {
     UploadedFile,
     ParseFilePipeBuilder,
     Req,
+    Delete, ParseUUIDPipe,
 } from '@nestjs/common';
 import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -31,6 +32,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadFileTypeValidator, UploadFileSizeValidator } from '../file-upload/validators';
 import { UPLOAD_ALLOWED_FILE_MIME_TYPES, UPLOAD_ALLOWED_FILE_EXTENSIONS, UPLOAD_ALLOWED_MAX_FILE_SIZES } from '../file-upload/constants/file-upload.contsants';
+import { FileOwnerGuard } from '../files/guards/file-owner.guard';
 
 @Controller('users')
 @ApiTags('Users')
@@ -422,5 +424,188 @@ export class UsersController {
         @Req() req: Request,
     ): Promise<User> {
         return this.usersService.updateUserAvatar(id, file);
+    }
+
+    @Delete(':id/avatar/:fileKey')
+    @UseGuards(AccountOwnerGuard, FileOwnerGuard)
+    @ApiOperation({ summary: 'Delete user avatar and restore default' })
+    @ApiParam({
+        required: true,
+        name: 'id',
+        type: 'number',
+        description: 'User identifier',
+        example: 1,
+    })
+    @ApiParam({
+        required: true,
+        name: 'fileKey',
+        type: 'string',
+        description: 'Avatar file key to delete',
+        example: 'a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6',
+    })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        type: User,
+        description: 'Avatar successfully deleted and default restored',
+    })
+    @ApiResponse({
+        status: HttpStatus.NOT_FOUND,
+        description: 'File not found',
+        schema: {
+            type: 'object',
+            properties: {
+                message: {
+                    type: 'string',
+                    description: 'Error message',
+                    example: 'File with key a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6 not found or deleted',
+                },
+                error: {
+                    type: 'string',
+                    description: 'Error message',
+                    example: 'Not Found',
+                },
+                statusCode: {
+                    type: 'number',
+                    description: 'Error code',
+                    example: 404,
+                },
+            },
+        },
+    })
+    @ApiResponse({
+        status: HttpStatus.UNAUTHORIZED,
+        description: 'Unauthorized access',
+        schema: {
+            type: 'object',
+            properties: {
+                message: {
+                    type: 'string',
+                    description: 'Error message',
+                    example: 'Unauthorized',
+                },
+                statusCode: {
+                    type: 'number',
+                    description: 'Error code',
+                    example: 401,
+                },
+            },
+        },
+    })
+    @ApiResponse({
+        status: HttpStatus.FORBIDDEN,
+        description: 'Forbidden access',
+        schema: {
+            type: 'object',
+            properties: {
+                message: {
+                    type: 'string',
+                    description: 'Error message',
+                    example: 'You can only access your own account',
+                },
+                error: {
+                    type: 'string',
+                    description: 'Error message',
+                    example: 'Forbidden',
+                },
+                statusCode: {
+                    type: 'number',
+                    description: 'Error code',
+                    example: 403,
+                },
+            },
+        },
+    })
+    async deleteAvatar(
+        @Param('id') id: number,
+        @Param('fileKey', new ParseUUIDPipe({ version: '4' })) fileKey: string,
+        ): Promise<User> {
+        return this.usersService.deleteUserAvatar(id, fileKey);
+    }
+
+    @Delete(':id')
+    @UseGuards(AccountOwnerGuard)
+    @ApiOperation({ summary: 'Delete user account permanently' })
+    @ApiParam({
+        required: true,
+        name: 'id',
+        type: 'number',
+        description: 'User identifier',
+        example: 1,
+    })
+    @ApiResponse({
+        status: HttpStatus.NO_CONTENT,
+        description: 'User account successfully deleted',
+    })
+    @ApiResponse({
+        status: HttpStatus.NOT_FOUND,
+        description: 'User not found',
+        schema: {
+            type: 'object',
+            properties: {
+                message: {
+                    type: 'string',
+                    description: 'Error message',
+                    example: 'User not found',
+                },
+                error: {
+                    type: 'string',
+                    description: 'Error message',
+                    example: 'Not Found',
+                },
+                statusCode: {
+                    type: 'number',
+                    description: 'Error code',
+                    example: 404,
+                },
+            },
+        },
+    })
+    @ApiResponse({
+        status: HttpStatus.UNAUTHORIZED,
+        description: 'Unauthorized access',
+        schema: {
+            type: 'object',
+            properties: {
+                message: {
+                    type: 'string',
+                    description: 'Error message',
+                    example: 'Unauthorized',
+                },
+                statusCode: {
+                    type: 'number',
+                    description: 'Error code',
+                    example: 401,
+                },
+            },
+        },
+    })
+    @ApiResponse({
+        status: HttpStatus.FORBIDDEN,
+        description: 'Forbidden access',
+        schema: {
+            type: 'object',
+            properties: {
+                message: {
+                    type: 'string',
+                    description: 'Error message',
+                    example: 'You can only access your own account',
+                },
+                error: {
+                    type: 'string',
+                    description: 'Error message',
+                    example: 'Forbidden',
+                },
+                statusCode: {
+                    type: 'number',
+                    description: 'Error code',
+                    example: 403,
+                },
+            },
+        },
+    })
+    async delete(
+        @Param('id') id: number,
+    ): Promise<void> {
+        await this.usersService.delete(id);
     }
 }

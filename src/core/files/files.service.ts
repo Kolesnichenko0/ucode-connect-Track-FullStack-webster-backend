@@ -1,6 +1,6 @@
 // src/core/files/files.service.ts
 import {
-    BadRequestException,
+    BadRequestException, ConflictException,
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
@@ -106,6 +106,26 @@ export class FilesService {
         );
 
         return this.fileRepository.softDeleteMany(ids);
+    }
+
+    async softDeleteByFileKeyWithTargetType(
+        fileKey: string,
+    ): Promise<void> {
+        const file = await this.findByFileKey(fileKey);
+        switch (file.targetType) {
+            case FileTargetType.USER_AVATAR:
+            case FileTargetType.FONT_ASSET:
+            case FileTargetType.PROJECT_PREVIEW: {
+                throw new ConflictException(
+                    'Cannot delete file by file key. Please use the specific delete method for this target type.',
+                );
+            }
+            case FileTargetType.PROJECT_ASSET: //TODO: Add specific delete method for this target type in projects module
+            default:
+                break;
+        }
+
+        return this.fileRepository.softDeleteByFileKey(fileKey);
     }
 
     async softDeleteByFileKey(fileKey: string): Promise<void> {

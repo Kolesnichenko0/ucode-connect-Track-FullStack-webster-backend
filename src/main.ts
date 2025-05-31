@@ -25,8 +25,8 @@ async function bootstrap() {
     const frontendOrigin = cs.get('app.clientUrl');
     const csrfConfig = cs.get('app.csrf');
     const corsConfig = cs.get('app.cors');
-    const publicAssetsPath = cs.get('assets.public.paths.base');
-    const projectPath = cs.get('assets.public.paths.logos');
+    const publicAssetsPath = cs.get('assets.publicPath');
+    const projectPath = cs.get('assets.paths.logos');
     const logoFilename = cs.get('assets.filenames.logo');
     const fullLogoPath = path.join(projectPath, logoFilename);
 

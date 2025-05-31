@@ -29,7 +29,7 @@ export class EmailService {
     }
 
     private async initLogo() {
-        const projectPath = this.cs.get('assets.public.paths.logos');
+        const projectPath = this.cs.get('assets.paths.logos');
         const logoFilename = this.cs.get('assets.filenames.logo');
 
         const fullLogoPath = path.join(projectPath, logoFilename);
@@ -123,7 +123,7 @@ export class EmailService {
                 html,
                 attachments: [
                     {
-                        filename: this.cs.get('assets.public.paths.logos'),
+                        filename: this.cs.get('assets.paths.logos'),
                         content: this.logo,
                         cid: 'logo@project',
                     },

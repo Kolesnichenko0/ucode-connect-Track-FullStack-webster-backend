@@ -5,6 +5,7 @@ import { FileRepository } from './files.repository';
 import { FilesController } from './files.controller';
 import { FilePathsService } from './file-paths.service';
 import { FileUploadModule } from '../file-upload/file-upload.module';
+import { FileUrlTransformerService } from './file-url-transformer.service';
 
 @Module({
     imports: [forwardRef(() => FileUploadModule)],
@@ -13,7 +14,8 @@ import { FileUploadModule } from '../file-upload/file-upload.module';
         FilesService,
         FileRepository,
         FilePathsService,
+        FileUrlTransformerService,
     ],
-    exports: [FilesService, FilePathsService],
+    exports: [FilesService, FilePathsService, FileUrlTransformerService],
 })
 export class FilesModule {}

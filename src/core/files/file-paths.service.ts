@@ -23,13 +23,13 @@ export class FilePathsService {
     private readonly configMapping: Record<FileTargetType, ConfigMapping> = {
         [FileTargetType.USER_AVATAR]: {
             storagePathKey: 'storage.paths.uploads.userAvatars',
-            assetPathKey: 'assets.public.paths.userAvatars',
-            assetUrlKey: 'assets.public.serverUrls.userAvatars',
+            assetPathKey: 'assets.paths.userAvatars',
+            assetUrlKey: 'assets.serverUrls.userAvatars',
         },
         [FileTargetType.PROJECT_ASSET]: {
             storagePathKey: 'storage.paths.uploads.projectAssets',
-            assetPathKey: 'assets.public.paths.projects',
-            assetUrlKey: 'assets.public.serverUrls.projects',
+            assetPathKey: 'assets.paths.projects',
+            assetUrlKey: 'assets.serverUrls.projects',
         },
         [FileTargetType.PROJECT_PREVIEW]: {
             storagePathKey: 'storage.paths.uploads.projectPreviews',
@@ -110,17 +110,15 @@ export class FilePathsService {
             );
         }
 
-        const filename = `${file.fileKey}.${file.extension}`;
-
         if (file.isDefault) {
             if (!config.assetServerUrl) {
                 throw new Error(
                     `No asset server URL configuration for file type: ${file.targetType}`,
                 );
             }
-            return buildUrl(config.assetServerUrl, filename);
+            return buildUrl(config.assetServerUrl, `${file.fileKey}.${file.extension}`);
         } else {
-            return buildUrl(this.storageFilesServerUrl, filename);
+            return buildUrl(this.storageFilesServerUrl, file.fileKey);
         }
     }
 

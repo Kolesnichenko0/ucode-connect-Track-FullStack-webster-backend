@@ -4,15 +4,14 @@ import {
     ImATeapotException,
     Injectable,
     NotFoundException,
-    OnModuleInit,
     UnauthorizedException,
+    BadRequestException,
 } from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import {
     SERIALIZATION_GROUPS,
-    setFilePathsService, setFilesService,
     User,
 } from './entities/user.entity';
 import { HashingPasswordsService } from './hashing-passwords.service';
@@ -23,10 +22,10 @@ import { FileTargetType } from '@prisma/client';
 import { UploadFileDto } from '../file-upload/dto/upload-file.dto';
 import { FileUploadService } from '../file-upload/file-upload.service';
 import { FilesService } from '../files/files.service';
-import { FilePathsService } from '../files/file-paths.service';
+import { FileUrlTransformerService } from '../files/file-url-transformer.service';
 
 @Injectable()
-export class UsersService implements OnModuleInit {
+export class UsersService {
 
     private readonly TARGET_TYPE = FileTargetType.USER_AVATAR;
 
@@ -35,12 +34,15 @@ export class UsersService implements OnModuleInit {
         private readonly passwordService: HashingPasswordsService,
         private readonly fileUploadService: FileUploadService,
         private readonly filesService: FilesService,
-        private readonly FilePathsService: FilePathsService
+        private readonly fileUrlTransformerService: FileUrlTransformerService,
     ) { }
 
-    onModuleInit() {
-        setFilePathsService(this.FilePathsService);
-        setFilesService(this.filesService);
+    private async getDefaultAvatarId(): Promise<number> {
+        const avatarFile = await this.filesService.findAllDefaultsByTargetType(this.TARGET_TYPE);
+        if (!avatarFile || avatarFile.length === 0) {
+            throw new ImATeapotException('Default avatar file not found');
+        }
+        return avatarFile[0].id;
     }
 
     async create(dto: CreateUserDto): Promise<User> {
@@ -49,15 +51,15 @@ export class UsersService implements OnModuleInit {
             throw new ConflictException('Email already in use');
         }
         dto.password = await this.passwordService.hash(dto.password);
-        const avatarFile = await this.filesService.findAllDefaultsByTargetType(FileTargetType.USER_AVATAR);
 
-        if (!avatarFile || avatarFile.length === 0) {
-            throw new ImATeapotException('Default avatar file not found');
-        }
+        const result = await this.usersRepository.create({...dto, avatarFileId: await this.getDefaultAvatarId()});
 
-        const result = await this.usersRepository.create({...dto, avatarFileId: avatarFile[0].id});
+        const transformedResult = await this.fileUrlTransformerService.transform(
+            result,
+            [FileUrlTransformerService.COMMON_CONFIGS.USER_AVATAR],
+        );
 
-        return plainToInstance(User, result, {
+        return plainToInstance(User, transformedResult, {
             groups: SERIALIZATION_GROUPS.CONFIDENTIAL,
         });
     }
@@ -73,7 +75,13 @@ export class UsersService implements OnModuleInit {
 
     async findAll(getUsersDto: GetUsersDto): Promise<User[]> {
         const users = await this.usersRepository.findAll(getUsersDto);
-        return users.map((user) =>
+
+        const transformedUsers = await this.fileUrlTransformerService.transform(
+            users,
+            [FileUrlTransformerService.COMMON_CONFIGS.USER_AVATAR],
+        );
+
+        return (transformedUsers as User[]).map((user) =>
             plainToInstance(User, user, {
                 groups: SERIALIZATION_GROUPS.BASIC,
             }),
@@ -88,6 +96,26 @@ export class UsersService implements OnModuleInit {
         if (!user) {
             throw new NotFoundException('User not found');
         }
+
+        const transformedUser = await this.fileUrlTransformerService.transform(
+            user,
+            [FileUrlTransformerService.COMMON_CONFIGS.USER_AVATAR],
+        );
+
+        return plainToInstance(User, transformedUser, {
+            groups: serializationGroup,
+        });
+    }
+
+    public async findByIdWithAvatar(
+        id: number,
+        serializationGroup: string[] = SERIALIZATION_GROUPS.PRIVATE,
+    ): Promise<User> {
+        const user = await this.usersRepository.findById(id);
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
         return plainToInstance(User, user, {
             groups: serializationGroup,
         });
@@ -98,10 +126,6 @@ export class UsersService implements OnModuleInit {
     }
 
     async findByIdWithConfidential(id: number): Promise<User> {
-        // const fileAvatar = await this.filesService.findById(user.avatarFileId);
-
-        // user.avatarFileURL = this.FilePathsService.getFileUrl(fileAvatar)
-
         return await this.findById(id, SERIALIZATION_GROUPS.CONFIDENTIAL);
     }
 
@@ -110,7 +134,13 @@ export class UsersService implements OnModuleInit {
         if (!result) {
             throw new NotFoundException('User with this email not found');
         }
-        return plainToInstance(User, result, {
+
+        const transformedResult = await this.fileUrlTransformerService.transform(
+            result,
+            [FileUrlTransformerService.COMMON_CONFIGS.USER_AVATAR],
+        );
+
+        return plainToInstance(User, transformedResult, {
             groups: SERIALIZATION_GROUPS.PRIVATE,
         });
     }
@@ -123,11 +153,18 @@ export class UsersService implements OnModuleInit {
     }
 
     async update(id: number, dto: UpdateUserDto): Promise<User> {
+        await this.findById(id);
         const result = await this.usersRepository.update(id, dto);
         if (!result) {
             throw new NotFoundException('User not found');
         }
-        return plainToInstance(User, result, {
+
+        const transformedUser = await this.fileUrlTransformerService.transform(
+            result,
+            [FileUrlTransformerService.COMMON_CONFIGS.USER_AVATAR],
+        );
+
+        return plainToInstance(User, transformedUser, {
             groups: SERIALIZATION_GROUPS.CONFIDENTIAL,
         });
     }
@@ -137,9 +174,6 @@ export class UsersService implements OnModuleInit {
         dto: UpdateUserPasswordDto,
     ): Promise<User> {
         const user = await this.findById(id);
-        if (!user) {
-            throw new NotFoundException('User with this id not found');
-        }
 
         const isMatch = user.password ?
         await this.passwordService.compare(
@@ -159,7 +193,13 @@ export class UsersService implements OnModuleInit {
         if (!result) {
             throw new NotFoundException('User not found');
         }
-        return plainToInstance(User, result, {
+
+        const transformedUser = await this.fileUrlTransformerService.transform(
+            result,
+            [FileUrlTransformerService.COMMON_CONFIGS.USER_AVATAR],
+        );
+
+        return plainToInstance(User, transformedUser, {
             groups: SERIALIZATION_GROUPS.CONFIDENTIAL,
         });
     }
@@ -169,9 +209,6 @@ export class UsersService implements OnModuleInit {
         avatar: Express.Multer.File,
     ): Promise<User> {
         const user = await this.findById(id);
-        if (!user) {
-            throw new NotFoundException('User with this email not found');
-        }
 
         const fileDbDetails: UploadFileDto = {
             authorId: id,
@@ -192,31 +229,72 @@ export class UsersService implements OnModuleInit {
             await this.filesService.softDelete(user.avatarFileId);
         }
 
-        return plainToInstance(User, result, {
+        const transformedResult = await this.fileUrlTransformerService.transform(
+            result,
+            [FileUrlTransformerService.COMMON_CONFIGS.USER_AVATAR],
+        );
+
+        return plainToInstance(User, transformedResult, {
             groups: SERIALIZATION_GROUPS.CONFIDENTIAL,
         });
+    }
 
-        // userInstance.avatarFileURL = fileUploadResult.url;
-        //
-        // return userInstance;
+    async deleteUserAvatar(
+        id: number,
+        fileKey: string,
+    ): Promise<User> {
+        const user = await this.findByIdWithAvatar(id);
+        console.log('User avatar fileKey:', user.avatarFile?.fileKey);
+
+        let result: User = user;
+        if (user.avatarFile && user.avatarFile.fileKey === fileKey) {
+            result = await this.usersRepository.update(id, {
+                avatarFileId: await this.getDefaultAvatarId(),
+            }) as User;
+        }
+
+        await this.filesService.softDeleteByFileKey(fileKey);
+
+        const transformedResult = await this.fileUrlTransformerService.transform(
+            result as User,
+            [FileUrlTransformerService.COMMON_CONFIGS.USER_AVATAR],
+        );
+
+        return plainToInstance(User, transformedResult, {
+            groups: SERIALIZATION_GROUPS.CONFIDENTIAL,
+        });
     }
 
     async resetPassword(id: number, newPassword: string): Promise<User> {
+        await this.findById(id);
         const hashedPassword = await this.passwordService.hash(newPassword);
         const updateData: Partial<User> = { password: hashedPassword };
         const result = await this.usersRepository.update(id, updateData);
         if (!result) {
             throw new NotFoundException('User not found');
         }
-        return plainToInstance(User, result, {
+
+        const transformedResult = await this.fileUrlTransformerService.transform(
+            result,
+            [FileUrlTransformerService.COMMON_CONFIGS.USER_AVATAR],
+        );
+
+        return plainToInstance(User, transformedResult, {
             groups: SERIALIZATION_GROUPS.CONFIDENTIAL,
         });
     }
 
     async confirmEmail(userId: number) {
+        await this.findById(userId);
         const updateData: Partial<User> = { isEmailVerified: true };
         const result = await this.usersRepository.update(userId, updateData);
-        return plainToInstance(User, result, {
+
+        const transformedResult = await this.fileUrlTransformerService.transform(
+            result as User,
+            [FileUrlTransformerService.COMMON_CONFIGS.USER_AVATAR],
+        );
+
+        return plainToInstance(User, transformedResult, {
             groups: SERIALIZATION_GROUPS.CONFIDENTIAL,
         });
     }
@@ -239,6 +317,7 @@ export class UsersService implements OnModuleInit {
         await this.usersRepository.delete(id);
     }
 }
+
 
 
 
