@@ -40,18 +40,6 @@ class Seeder {
     }
 
     async seedDefaultAvatar(): Promise<number> {
-        // Проверяем, существует ли дефолтный файл в БД с id=1
-        try {
-            const existingFile = await this.filesService.findById(1);
-            if (existingFile) {
-                console.log('Default avatar already exists ✅');
-                return existingFile.id;
-            }
-        } catch (error) {
-            // Файл не найден, создаем новый
-        }
-
-        // Путь к дефолтному файлу аватарки в публичной папке
         const defaultAvatarPath = path.join(process.cwd(), 'public', 'assets', 'defaults', 'avatars', 'default-avatar.png');
 
         // Убедимся, что папка для дефолтных аватарок существует

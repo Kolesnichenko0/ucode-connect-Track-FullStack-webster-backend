@@ -166,7 +166,7 @@ export class FilesController {
         @Param('fileKey', new ParseUUIDPipe({ version: '4' })) fileKey: string,
         @Res({ passthrough: true }) res: ExpressResponse,
     ): Promise<StreamableFile> {
-        return this.filesService.getFileStreamByFileKey(fileKey, res);
+        return this.fileUploadService.getFileStreamByFileKey(fileKey, res);
     }
 
     @Delete(':fileKey')
@@ -284,7 +284,7 @@ export class FilesController {
         },
     })
     async deleteByFileKey(@Param('fileKey', new ParseUUIDPipe({ version: '4' })) fileKey: string): Promise<{ message: string }> {
-        await this.fileUploadService.delete(fileKey);
+        await this.filesService.softDeleteByFileKey(fileKey, true);
         return { message: 'File deleted successfully' };
     }
 

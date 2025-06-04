@@ -1,6 +1,7 @@
 // src/core/files/files.service.ts
 import {
-    BadRequestException, ConflictException,
+    BadRequestException,
+    ConflictException,
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
@@ -54,7 +55,10 @@ export class FilesService {
         authorId: number,
         includeSoftDeleted: boolean = false,
     ): Promise<File[]> {
-        return this.fileRepository.findAllByAuthorId(authorId, includeSoftDeleted);
+        return this.fileRepository.findAllByAuthorId(
+            authorId,
+            includeSoftDeleted,
+        );
     }
 
     async findById(
@@ -101,35 +105,31 @@ export class FilesService {
             throw new NotFoundException('No files found for the provided IDs');
         }
 
-        await Promise.all(
-            ids.map((id) => this.findById(id)),
-        );
+        await Promise.all(ids.map((id) => this.findById(id)));
 
         return this.fileRepository.softDeleteMany(ids);
     }
 
-    async softDeleteByFileKeyWithTargetType(
+    async softDeleteByFileKey(
         fileKey: string,
+        withTargetType: boolean = false,
     ): Promise<void> {
         const file = await this.findByFileKey(fileKey);
-        switch (file.targetType) {
-            case FileTargetType.USER_AVATAR:
-            case FileTargetType.FONT_ASSET:
-            case FileTargetType.PROJECT_PREVIEW: {
-                throw new ConflictException(
-                    'Cannot delete file by file key. Please use the specific delete method for this target type.',
-                );
+
+        if (withTargetType) {
+            switch (file.targetType) {
+                case FileTargetType.USER_AVATAR:
+                case FileTargetType.FONT_ASSET:
+                case FileTargetType.PROJECT_PREVIEW: {
+                    throw new ConflictException(
+                        'Cannot delete file. Please use the specific delete method for this target type.',
+                    );
+                }
+                case FileTargetType.PROJECT_ASSET: //TODO: Add specific delete method for this target type in projects module
+                default:
+                    break;
             }
-            case FileTargetType.PROJECT_ASSET: //TODO: Add specific delete method for this target type in projects module
-            default:
-                break;
         }
-
-        return this.fileRepository.softDeleteByFileKey(fileKey);
-    }
-
-    async softDeleteByFileKey(fileKey: string): Promise<void> {
-        await this.findByFileKey(fileKey);
 
         return this.fileRepository.softDeleteByFileKey(fileKey);
     }
@@ -137,25 +137,6 @@ export class FilesService {
     async hardDelete(id: number): Promise<void> {
         await this.findById(id, true);
         await this.fileRepository.hardDelete(id);
-    }
-
-    async getFileStreamByFileKey(
-        fileKey: string,
-        res: ExpressResponse,
-    ): Promise<StreamableFile> {
-        const file = await this.findByFileKey(fileKey);
-
-        if (!file) {
-            throw new NotFoundException(`File with ${fileKey} not found!`);
-        }
-
-        const filePath = this.filePathsService.getFilePath(file);
-        res.set({
-            'Content-Type': file.mimeType,
-            'Content-Disposition': `inline; filename="${file.fileKey}.${file.extension}"`,
-        });
-        const fileStream = createReadStream(filePath);
-        return new StreamableFile(fileStream);
     }
 
     async getDefaultFileUrlsByTargetType(
