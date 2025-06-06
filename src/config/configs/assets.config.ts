@@ -15,7 +15,8 @@ const AssetsSchema = z.object({
 export type IAssetsConfig = ReturnType<typeof getAssetsConfig>;
 
 const ASSET_CATEGORIES = {
-    projects: 'images/projects',
+    projects: 'images/project-photos',
+    projectPreviews: 'images/project-previews',
     logos: 'images/logos',
     userAvatars: 'images/user-avatars',
 };

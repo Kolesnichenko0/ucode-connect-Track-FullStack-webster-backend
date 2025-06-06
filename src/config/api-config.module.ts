@@ -10,6 +10,7 @@ import getEtherealConfig from './configs/ethereal.config';
 import getGoogleConfig from './configs/google.config';
 import getAssetsConfig from './configs/assets.config';
 import getStorageConfig from './configs/storage.config';
+import getUnsplashConfig from './configs/unsplash.config';
 
 @Global()
 @Module({
@@ -23,6 +24,7 @@ import getStorageConfig from './configs/storage.config';
                 getGoogleConfig,
                 getStorageConfig,
                 getAssetsConfig,
+                getUnsplashConfig,
             ],
             envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
             isGlobal: true,

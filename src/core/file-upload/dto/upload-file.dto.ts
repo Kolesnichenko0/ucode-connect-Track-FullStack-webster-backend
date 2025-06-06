@@ -1,6 +1,6 @@
 // src/core/files/dto/upload-file.dto.ts
 import { FileTargetType } from '@prisma/client';
-import { IsBooleanField, IsEnumValue, IsId } from 'src/common/validators';
+import { IsBooleanField, IsEnglishName, IsEnumValue, IsId } from 'src/common/validators';
 
 export class UploadFileDto {
   @IsId(true)
@@ -14,4 +14,7 @@ export class UploadFileDto {
 
   @IsBooleanField(true)
   isDefault?: boolean = false;
+
+  @IsEnglishName(true)
+  fileKey?: string;
 }

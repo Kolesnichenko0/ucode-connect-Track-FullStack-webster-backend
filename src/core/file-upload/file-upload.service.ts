@@ -30,13 +30,13 @@ export class FileUploadService {
             );
         }
 
-        const fileKey = generateFileKey();
+        const fileKey = fileMetadata.fileKey || generateFileKey();
         const fileExt = getFileExtension(file.originalname);
         const filename = `${fileKey}.${fileExt}`;
 
         const targetDir = this.filePathsService.getDirectoryPath(
             fileMetadata.targetType,
-            false,
+            fileMetadata.isDefault,
         );
 
         const filePath = buildFilePath(targetDir, filename);

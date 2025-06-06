@@ -33,6 +33,8 @@ export class FilePathsService {
         },
         [FileTargetType.PROJECT_PREVIEW]: {
             storagePathKey: 'storage.paths.uploads.projectPreviews',
+            assetPathKey: 'assets.paths.projectPreviews',
+            assetUrlKey: 'assets.serverUrls.projectPreviews',
         },
         [FileTargetType.FONT_ASSET]: {
             storagePathKey: 'storage.paths.uploads.fontAssets',

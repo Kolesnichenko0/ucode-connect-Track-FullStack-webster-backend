@@ -148,3 +148,25 @@ All users have a password:
 ```text
 Password123!$
 ```
+
+
+## 🏞 Unsplash
+**Unsplash** is the internet’s source of freely usable images.
+
+To connect to the Unsplash, follow these steps:
+1. Sign up for an account with Unsplash:
+   Go to (Unsplash Developers)[https://unsplash.com/developers] and sign in to your Unsplash account (or create a new one).
+2. Create an app:
+   In the `Your Applications` section, click `New Application`.
+   Fill in the fields: name of the app (for example, `Webster App`), description (for example, `Get images for projects`). Accept the terms and conditions.
+3. Get the API key:
+   After creating the app, you will see the Access Key (and Secret Key if you need OAuth). The Access Key is your API key.
+   Copy the key and save it in a safe place.
+4. After put your access key to the `.env.development` file:
+    ```bash
+    # Upsplash Configuration
+    UNSPLASH_ACCESS_KEY=<API_key>
+    ```
+In Development Mode, you have **50 requests per hour**. To increase the limit (up to 5000 requests/hour), apply for production access via the Unsplash dashboard, providing use cases with attribution.
+
+More information can be found in the [Unsplash documentation](https://unsplash.com/documentation).

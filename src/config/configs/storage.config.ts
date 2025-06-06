@@ -1,5 +1,4 @@
 // src/config/configs/storage.config.ts
-import * as path from 'path';
 import { z } from 'zod';
 import { ConfigValidator } from '../config.validator';
 import getAppConfig from './app.config';

@@ -122,3 +122,4 @@
         "seed": "node dist/prisma/seeds/index.js"
     }
 }
+

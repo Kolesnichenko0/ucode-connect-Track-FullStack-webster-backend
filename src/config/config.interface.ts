@@ -6,6 +6,7 @@ import { IEtherealConfig } from './configs/ethereal.config';
 import { IGoogleConfig } from './configs/google.config';
 import { IAssetsConfig } from './configs/assets.config';
 import { IStorageConfig } from './configs/storage.config';
+import { IUnsplashConfig } from './configs/unsplash.config';
 
 export enum Env {
     DEVELOPMENT = 'development',
@@ -19,7 +20,8 @@ export type IConfig = IAppConfig &
     IEtherealConfig &
     IGoogleConfig &
     IStorageConfig &
-    IAssetsConfig;
+    IAssetsConfig &
+    IUnsplashConfig;
 
 type Primitive = string | number | boolean | null | undefined;
 
