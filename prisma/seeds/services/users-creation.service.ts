@@ -53,6 +53,12 @@ export class UsersCreationService {
                     await this.createUserAvatar(createdUser.id, user.isMale, avatarsDir);
                 }
 
+                if (userNumber === 1 || userNumber % 2 === 0) {
+                    await this.baseSeeder.usersRepository.update(userNumber, {
+                        isEmailVerified: true
+                    });
+                }
+
                 console.log(`✅ User ${userNumber} created successfully: ${user.email}`);
             } catch (error) {
                 console.error(`❌ Failed to create user ${userNumber}: ${user.email}`, error);

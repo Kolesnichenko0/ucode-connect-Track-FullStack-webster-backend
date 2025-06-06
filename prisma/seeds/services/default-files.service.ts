@@ -13,7 +13,7 @@ export class DefaultFilesService {
     }
 
     async createDefaultAvatar(): Promise<number> {
-        const { FILENAME, MIME_TYPE } = SEED_CONSTANTS.FILES.DEFAULT_USER_AVATAR_ASSET;
+        const { FILENAME } = SEED_CONSTANTS.FILES.DEFAULT_USER_AVATAR_ASSET;
         const key = FILENAME.split('.')[0];
         const extension = FILENAME.split('.')[1];
 
@@ -38,40 +38,73 @@ export class DefaultFilesService {
             isDefault: true,
             targetType: FileTargetType.USER_AVATAR,
             fileKey: key,
-            mimeType: MIME_TYPE,
+            mimeType: 'image/png',
             extension: extension,
         });
 
         return file.id;
     }
 
-    async createDefaultPreview(): Promise<number> {
-        const { FILENAME, MIME_TYPE } = SEED_CONSTANTS.FILES.DEFAULT_PROJECT_PREVIEW;
+    async createDefaultProjectPreview(): Promise<number> {
+        const { FILENAME } = SEED_CONSTANTS.FILES.DEFAULT_PROJECT_PREVIEW;
         const key = FILENAME.split('.')[0];
         const extension = FILENAME.split('.')[1];
 
-        const projectDir = this.baseSeeder.filePathsService.getDirectoryPath(
+        const projectPreviewDir = this.baseSeeder.filePathsService.getDirectoryPath(
             FileTargetType.PROJECT_PREVIEW,
             true
         );
 
-        await ensureDirectoryExists(projectDir);
+        await ensureDirectoryExists(projectPreviewDir);
 
-        const defaultAvatarPath = buildFilePath(projectDir, FILENAME);
+        const defaultProjectPreviewPath = buildFilePath(projectPreviewDir, FILENAME);
 
         try {
-            await fs.access(defaultAvatarPath);
-            console.log(`Default avatar already exists: ${defaultAvatarPath}`);
+            await fs.access(defaultProjectPreviewPath);
+            console.log(`Default avatar already exists: ${defaultProjectPreviewPath}`);
         } catch {
-            console.log(`Creating default avatar placeholder at: ${defaultAvatarPath}`);
-            await fs.writeFile(defaultAvatarPath, Buffer.alloc(0));
+            console.log(`Creating default avatar placeholder at: ${defaultProjectPreviewPath}`);
+            await fs.writeFile(defaultProjectPreviewPath, Buffer.alloc(0));
         }
 
         const file = await this.baseSeeder.filesService.create({
             isDefault: true,
             targetType: FileTargetType.PROJECT_PREVIEW,
             fileKey: key,
-            mimeType: MIME_TYPE,
+            mimeType: 'image/jpeg',
+            extension: extension,
+        });
+
+        return file.id;
+    }
+
+    async createDefaultProjectAsset(): Promise<number> {
+        const { FILENAME } = SEED_CONSTANTS.FILES.DEFAULT_PROJECT_ASSET;
+        const key = FILENAME.split('.')[0];
+        const extension = FILENAME.split('.')[1];
+
+        const projectAssetDir = this.baseSeeder.filePathsService.getDirectoryPath(
+            FileTargetType.PROJECT_ASSET,
+            true
+        );
+
+        await ensureDirectoryExists(projectAssetDir);
+
+        const defaultProjectAssetPath = buildFilePath(projectAssetDir, FILENAME);
+
+        try {
+            await fs.access(defaultProjectAssetPath);
+            console.log(`Default avatar already exists: ${defaultProjectAssetPath}`);
+        } catch {
+            console.log(`Creating default avatar placeholder at: ${defaultProjectAssetPath}`);
+            await fs.writeFile(defaultProjectAssetPath, Buffer.alloc(0));
+        }
+
+        const file = await this.baseSeeder.filesService.create({
+            isDefault: true,
+            targetType: FileTargetType.PROJECT_ASSET,
+            fileKey: key,
+            mimeType: 'image/jpeg',
             extension: extension,
         });
 

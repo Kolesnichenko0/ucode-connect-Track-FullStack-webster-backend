@@ -43,7 +43,7 @@ export class FileUploadService {
 
         const savedFile = await this.filesService.create({
             ...(fileMetadata.authorId && { authorId: fileMetadata.authorId }),
-            ...(fileMetadata.targetId && { authorId: fileMetadata.targetId }),
+            ...(fileMetadata.targetId && { targetId: fileMetadata.targetId }),
             targetType: fileMetadata.targetType,
             fileKey: fileKey,
             mimeType: file.mimetype,

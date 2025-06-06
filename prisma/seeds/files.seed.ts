@@ -18,8 +18,13 @@ export class FilesSeed {
 
         // Создаем дефолтный превью для проектов
         console.log('🖼️  Creating default project preview...');
-        const defaultPreviewId = await this.defaultFilesService.createDefaultPreview();
+        const defaultPreviewId = await this.defaultFilesService.createDefaultProjectPreview();
         console.log(`✅ Default project preview created with ID: ${defaultPreviewId}\n`);
+
+        // Создаем дефолтные project assets
+        console.log('🗂️  Creating default project asset...');
+        const defaultProjectAssetId = await this.defaultFilesService.createDefaultProjectAsset();
+        console.log(`✅ Default project asset created with ID: ${defaultProjectAssetId}\n`);
 
         // Создаем дефолтные project assets
         console.log('🖼️  Creating default project assets...');

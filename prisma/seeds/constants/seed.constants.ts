@@ -16,7 +16,6 @@ export const SEED_CONSTANTS = {
     FILES: {
         DEFAULT_USER_AVATAR_ASSET: {
             FILENAME: 'default-avatar.png',
-            MIME_TYPE: 'image/png',
         },
         USER_AVATARS_UPLOADS_UNSPLASH: {
             SIZE: 400,
@@ -24,7 +23,6 @@ export const SEED_CONSTANTS = {
         },
         DEFAULT_PROJECT_ASSET: {
             FILENAME: 'default-project-asset.jpg',
-            MIME_TYPE: 'image/jpeg',
         },
         DEFAULT_PROJECT_ASSETS_UNSPLASH: {
             COUNT: 5,
@@ -41,7 +39,6 @@ export const SEED_CONSTANTS = {
         },
         DEFAULT_PROJECT_PREVIEW: {
             FILENAME: 'default-project-preview.jpg',
-            MIME_TYPE: 'image/jpeg',
         },
     },
 } as const;

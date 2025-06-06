@@ -67,7 +67,7 @@ export class UploadFileTypeValidator extends FileValidator<
     )}`;
   }
 
-  private async validateFile(file: Express.Multer.File): Promise<boolean> {
+  async validateFile(file: Express.Multer.File): Promise<boolean> {
     const fileExt = path.extname(file.originalname);
 
     if (!this.allowedExtentions.includes(fileExt)) return false;
