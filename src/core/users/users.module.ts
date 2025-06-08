@@ -11,9 +11,17 @@ import { HashingModule } from '../hashing/hashing.module';
 import { FileUploadService } from '../file-upload/file-upload.service';
 import { FileUploadModule } from '../file-upload/file-upload.module';
 import { FilesModule } from '../files/files.module';
+import { ProjectsModule } from 'src/modules/projects/projects.module';
 
 @Module({
-    imports: [EmailModule, forwardRef(() => AuthModule), HashingModule, FileUploadModule, FilesModule],
+    imports: [
+        EmailModule,
+        forwardRef(() => AuthModule),
+        HashingModule,
+        FileUploadModule,
+        FilesModule,
+        forwardRef(() => ProjectsModule)
+    ],
     controllers: [UsersController],
     providers: [
         UsersService,

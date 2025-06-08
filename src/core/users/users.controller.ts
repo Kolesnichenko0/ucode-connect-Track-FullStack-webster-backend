@@ -12,7 +12,11 @@ import {
     UploadedFile,
     ParseFilePipeBuilder,
     Req,
-    Delete, ParseUUIDPipe,
+    Query,
+    UsePipes,
+    ValidationPipe,
+    Delete,
+    ParseUUIDPipe,
 } from '@nestjs/common';
 import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -25,6 +29,7 @@ import {
     ApiConsumes,
     ApiOperation,
     ApiParam,
+    ApiQuery,
     ApiResponse,
     ApiTags,
     OmitType,
@@ -32,6 +37,10 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadFileTypeValidator, UploadFileSizeValidator } from '../file-upload/validators';
 import { UPLOAD_ALLOWED_FILE_MIME_TYPES, UPLOAD_ALLOWED_FILE_EXTENSIONS, UPLOAD_ALLOWED_MAX_FILE_SIZES } from '../file-upload/constants/file-upload.contsants';
+import { ProjectsService } from '../../modules/projects/projects.service';
+import { GetProjectsDto } from '../../modules/projects/dto/get-projects.dto';
+import { Project, ProjectWithBasic } from '../../modules/projects/entities/project.entity';
+
 import { FileOwnerGuard } from '../files/guards/file-owner.guard';
 
 @Controller('users')
@@ -39,6 +48,7 @@ import { FileOwnerGuard } from '../files/guards/file-owner.guard';
 export class UsersController {
     constructor(
         private readonly usersService: UsersService,
+        private readonly projectsService: ProjectsService,
     ) {}
 
     @Get('me')
@@ -286,7 +296,7 @@ export class UsersController {
                     type: 'number',
                     description: 'Error code',
                     example: 403,
-                }
+                },
             },
         },
     })
@@ -398,18 +408,85 @@ export class UsersController {
         @UploadedFile(
             new ParseFilePipeBuilder()
                 .addValidator(
-                    new UploadFileTypeValidator({allowedMimeTypes: [...UPLOAD_ALLOWED_FILE_MIME_TYPES.USER_AVATAR], allowedExtentions: [...UPLOAD_ALLOWED_FILE_EXTENSIONS.USER_AVATAR]}),
+                    new UploadFileTypeValidator({
+                        allowedMimeTypes: [
+                            ...UPLOAD_ALLOWED_FILE_MIME_TYPES.USER_AVATAR,
+                        ],
+                        allowedExtensions: [
+                            ...UPLOAD_ALLOWED_FILE_EXTENSIONS.USER_AVATAR,
+                        ],
+                    }),
                 )
                 .addValidator(
-                    new UploadFileSizeValidator({maxSize: UPLOAD_ALLOWED_MAX_FILE_SIZES.USER_AVATAR})
+                    new UploadFileSizeValidator({
+                        maxSize: UPLOAD_ALLOWED_MAX_FILE_SIZES.USER_AVATAR,
+                    }),
                 )
                 .build(),
-        ) file: Express.Multer.File,
+        )
+        file: Express.Multer.File,
         @Param('id') id: number,
         @UserId() authorId: number,
         @Req() req: Request,
     ): Promise<User> {
         return this.usersService.updateUserAvatar(id, file);
+    }
+
+    @Get(':id/projects')
+    @UseGuards(AccountOwnerGuard)
+    @ApiOperation({ summary: 'Get user projects' })
+    @ApiParam({
+        name: 'id',
+        type: 'number',
+        description: 'User ID',
+        example: 1,
+    })
+    @ApiQuery({
+        name: 'is_template',
+        type: 'boolean',
+        description: 'Filter by template status',
+        example: false,
+        required: false,
+    })
+    @ApiQuery({
+        name: 'title',
+        type: 'string',
+        description: 'Search by project title',
+        example: 'design',
+        required: false,
+    })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: 'User projects successfully retrieved',
+        schema: {
+            type: 'object',
+            properties: {
+                projects: {
+                    type: 'array',
+                    items: { $ref: '#/components/schemas/Project' },
+                },
+                total: { type: 'number', example: 25 },
+            },
+        },
+    })
+    @ApiResponse({
+        status: HttpStatus.NOT_FOUND,
+        description: 'User not found',
+    })
+    @ApiResponse({
+        status: HttpStatus.FORBIDDEN,
+        description: 'Access denied',
+    })
+    async getUserProjects(
+        @Param('id') id: number,
+        @Query() getProjectsDto: GetProjectsDto,
+    ): Promise<{
+        projects: ProjectWithBasic[];
+        total: number;
+    }> {
+        await this.usersService.findById(id);
+
+        return this.projectsService.findByAuthorId(id, getProjectsDto);
     }
 
     @Delete(':id/avatar/:fileKey')
@@ -443,7 +520,8 @@ export class UsersController {
                 message: {
                     type: 'string',
                     description: 'Error message',
-                    example: 'File with key a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6 not found or deleted',
+                    example:
+                        'File with key a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6 not found or deleted',
                 },
                 error: {
                     type: 'string',
@@ -504,7 +582,7 @@ export class UsersController {
     async deleteAvatar(
         @Param('id') id: number,
         @Param('fileKey', new ParseUUIDPipe({ version: '4' })) fileKey: string,
-        ): Promise<User> {
+    ): Promise<User> {
         return this.usersService.deleteUserAvatar(id, fileKey);
     }
 
@@ -589,9 +667,7 @@ export class UsersController {
             },
         },
     })
-    async delete(
-        @Param('id') id: number,
-    ): Promise<void> {
+    async delete(@Param('id') id: number): Promise<void> {
         await this.usersService.delete(id);
     }
 }

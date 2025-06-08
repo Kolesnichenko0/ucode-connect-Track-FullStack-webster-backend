@@ -1,10 +1,11 @@
 // src/modules/modules.module.ts
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
+import { ProjectsModule } from './projects/projects.module';
 
 @Module({
     imports: [
         // FontsModule,
-        // ProjectsModule
+        forwardRef(() => ProjectsModule)
     ],
 })
 export class ModulesModule { }

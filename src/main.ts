@@ -11,10 +11,20 @@ import { CsrfError } from './common/filters';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { applySwaggerSecurity } from './common/enhancers';
 import * as path from 'path';
+import * as express from 'express';
 import { buildUrl } from './common/utils';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+    app.use(express.json({
+        limit: '50mb'
+    }));
+
+    app.use(express.urlencoded({
+        limit: '50mb',
+        extended: true
+    }));
 
     app.use(cookieParser());
 

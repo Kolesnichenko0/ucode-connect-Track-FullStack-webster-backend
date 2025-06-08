@@ -23,7 +23,7 @@ export class FileUploadService {
     async upload(
         file: Express.Multer.File,
         fileMetadata: UploadFileDto,
-    ): Promise<{ fileId: number; url: string }> {
+    ): Promise<{ fileId: number; url: string, fileKey: string, }> {
         if (!this.filePathsService.isValidTargetType(fileMetadata.targetType)) {
             throw new BadRequestException(
                 `Unsupported file target type: ${fileMetadata.targetType}`,
@@ -57,13 +57,14 @@ export class FileUploadService {
         return {
             fileId: savedFile.id,
             url: this.filePathsService.getFileUrl(savedFile),
+            fileKey: fileKey
         };
     }
 
     async uploadMany(
         files: Express.Multer.File[],
         fileMetadata: UploadFileDto,
-    ): Promise<Array<{ fileId: number; url: string }>> {
+    ): Promise<Array<{ fileId: number; url: string, fileKey: string}>> {
         return Promise.all(
             files.map((file) => this.upload(file, fileMetadata)),
         );
