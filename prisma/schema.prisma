@@ -84,7 +84,6 @@ model File {
   author            User?     @relation("FileAuthor", fields: [authorId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   userAvatars       User[]    @relation("UserAvatarFile")
   projectPreviewFor Project[] @relation("ProjectPreviewFile")
-  // fontFileFor       Font?    @relation("FontFile")
 
   @@index([authorId], map: "fk_files_author_id")
   @@map("files")

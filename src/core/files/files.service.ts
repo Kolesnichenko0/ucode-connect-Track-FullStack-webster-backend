@@ -110,8 +110,6 @@ export class FilesService {
             includeSoftDeleted,
         );
 
-        console.log("fileKey: ", fileKey)
-
         if (!file) {
             throw new NotFoundException(
                 `File with key ${fileKey} not found or deleted`,

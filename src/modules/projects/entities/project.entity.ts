@@ -1,5 +1,5 @@
 // src/modules/projects/entities/project.entity.ts
-import { Transform, Exclude, Expose } from 'class-transformer';
+import { Expose } from 'class-transformer';
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import { Project as PrismaProject } from '@prisma/client';
 
@@ -59,10 +59,6 @@ export class Project implements PrismaProject {
         example: 'https://api.example.com/files/abc-123-def.png'
     })
     @Expose({ groups: ['basic'] })
-    @Transform(({ obj, value }) => {
-        // This will be populated by service layer
-        return value;
-    })
     previewUrl?: string;
 }
 

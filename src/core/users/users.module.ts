@@ -20,7 +20,7 @@ import { ProjectsModule } from 'src/modules/projects/projects.module';
         HashingModule,
         FileUploadModule,
         FilesModule,
-        forwardRef(() => ProjectsModule)
+        ProjectsModule
     ],
     controllers: [UsersController],
     providers: [

@@ -13,7 +13,6 @@ import { UsersModule } from 'src/core/users/users.module';
         DatabaseModule,
         FilesModule,
         FileUploadModule,
-        forwardRef(() => UsersModule),
     ],
     controllers: [ProjectsController],
     providers: [

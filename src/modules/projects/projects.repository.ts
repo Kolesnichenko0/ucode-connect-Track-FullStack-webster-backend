@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../../core/db/database.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { GetProjectsDto } from '../../core/users/dto/gel-user-projects.dto';
+import { GetProjectsDto } from './dto/get-projects.dto';
 import { Project } from '@prisma/client';
 
 @Injectable()
@@ -53,7 +53,6 @@ export class ProjectsRepository {
         if (title) {
             whereConditions.title = {
                 contains: title,
-                // mode: 'insensitive',
             };
         }
 
@@ -92,13 +91,10 @@ export class ProjectsRepository {
         });
     }
 
-    async update(id: number, data: UpdateProjectDto): Promise<Project> {
+    async update(id: number, data: Partial<Project>): Promise<Project> {
         return this.db.project.update({
             where: { id },
-            data: {
-                ...data,
-                updatedAt: new Date(),
-            },
+            data: data as any,
         });
     }
 

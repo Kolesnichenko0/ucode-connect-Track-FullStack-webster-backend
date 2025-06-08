@@ -2,6 +2,7 @@
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { promises as fs } from 'fs';
+import { BadRequestException } from '@nestjs/common';
 
 export function normalizeFilePath(
     pathStr: string,
@@ -127,4 +128,35 @@ export async function cleanupDirectoryExcept(
     exceptions: string[],
 ): Promise<void> {
     await cleanupDirectoryBase(dirPath, (file) => !exceptions.includes(file), exceptions.length);
+}
+
+export function isBase64Image(str: string | undefined | null): str is string {
+    return typeof str === 'string' && str.startsWith('data:image/');
+}
+
+export async function convertBase64ToFile(
+    base64: string,
+    filename: string,
+): Promise<Express.Multer.File> {
+    const matches = base64.match(/^data:image\/([a-zA-Z+]+);base64,(.+)$/);
+    if (!matches) {
+        throw new BadRequestException('Invalid base64 image format');
+    }
+
+    const [, ext, data] = matches;
+    const buffer = Buffer.from(data, 'base64');
+
+    return {
+        buffer,
+        originalname: filename,
+        mimetype: `image/${ext}`,
+        size: buffer.length,
+    } as Express.Multer.File;
+}
+
+export function isURL(str: string | undefined | null): str is string {
+    if (typeof str !== 'string' || str.length === 0) {
+        return false;
+    }
+    return str.startsWith('http://') || str.startsWith('https://');
 }

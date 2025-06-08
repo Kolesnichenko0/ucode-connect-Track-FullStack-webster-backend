@@ -3,7 +3,7 @@ import {
     Injectable,
     NotFoundException,
     BadRequestException,
-    ForbiddenException, ImATeapotException,
+    ImATeapotException,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { ProjectsRepository } from './projects.repository';
@@ -20,7 +20,7 @@ import { UploadFileDto } from 'src/core/file-upload/dto/upload-file.dto';
 import { File as PrismaFile, FileTargetType } from '@prisma/client';
 import * as fsPromises from 'fs/promises';
 import { isUUID } from 'class-validator';
-import { convertBase64ToFile, isBase64Image, isURL } from '../../common/utils/projects.utils';
+import { convertBase64ToFile, isBase64Image } from '../../common/utils';
 
 @Injectable()
 export class ProjectsService {
@@ -37,7 +37,6 @@ export class ProjectsService {
     ) {}
 
     async create(dto: CreateProjectDto, authorId?: number): Promise<Project> {
-        // Process thumbnail and extract base64 images from content
         const { previewFileId, processedContent } =
             await this.processProjectContent(dto.content, authorId);
 
@@ -168,7 +167,7 @@ export class ProjectsService {
             await this.filesService.findById(oldPreviewFileId);
 
         let processedContent = dto.content;
-        let updateData: any = { ...dto };
+        let updateData: Partial<Project> = { ...dto };
 
         if (dto.content) {
             const { previewFileId, processedContent: newContent } =
@@ -182,7 +181,7 @@ export class ProjectsService {
             };
         }
 
-        const project = await this.projectsRepository.update(id, updateData);
+        const project: Project = await this.projectsRepository.update(id, updateData);
 
         if (dto.content && !oldPreviewFile.isDefault)
             await this.filesService.softDelete(oldPreviewFileId);
@@ -209,8 +208,6 @@ export class ProjectsService {
             authorId,
         );
 
-        // const defaultProjectPreview = await this.getDefaultPreviewId();
-
         const newProjectData: CreateProjectDto = {
             title: `${originalProject.title} (Copy)`,
             description: originalProject.description,
@@ -229,8 +226,6 @@ export class ProjectsService {
             authorId,
             copiedProject.id,
         );
-
-        console.log("copiedContent: ", copiedContent)
 
         await this.projectsRepository.update(
             copiedProject.id,
@@ -313,7 +308,6 @@ export class ProjectsService {
         let processedContent = { ...content };
         let previewFileId: number;
 
-        // Process thumbnail
         if (content.thumbnailUrl && isBase64Image(content.thumbnailUrl)) {
             const thumbnailFile = await convertBase64ToFile(
                 content.thumbnailUrl,

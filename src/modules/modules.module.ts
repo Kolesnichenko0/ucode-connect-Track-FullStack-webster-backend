@@ -5,7 +5,7 @@ import { ProjectsModule } from './projects/projects.module';
 @Module({
     imports: [
         // FontsModule,
-        forwardRef(() => ProjectsModule)
+        ProjectsModule,
     ],
 })
 export class ModulesModule { }

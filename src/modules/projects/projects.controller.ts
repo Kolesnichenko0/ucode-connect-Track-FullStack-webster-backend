@@ -7,12 +7,11 @@ import {
     Delete,
     Body,
     Param,
-    Query,
     UseGuards,
     HttpStatus,
     ParseIntPipe,
     UploadedFiles,
-    UseInterceptors, UploadedFile, ParseFilePipeBuilder, HttpCode, ParseUUIDPipe,
+    UseInterceptors, HttpCode, ParseUUIDPipe,
 } from '@nestjs/common';
 import {
     ApiTags,
@@ -30,10 +29,8 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectFilesResponseDto } from './dto/project-files-response.dto';
 import { CopyProjectResponseDto } from './dto/copy-project-response.dto';
 import { Project } from './entities/project.entity';
-import { JwtAuthGuard } from '../../core/auth/guards/auth.guards';
 import { ProjectOwnerGuard } from './guards/project-owner.guard';
 import { UserId } from '../../common/decorators';
-import { User } from '../../core/users/entities/user.entity';
 import { UploadFileSizeValidator, UploadFileTypeValidator } from '../../core/file-upload/validators';
 import {
     UPLOAD_ALLOWED_FILE_EXTENSIONS,
@@ -44,7 +41,6 @@ import { CanCopyProjectGuard } from './guards/can-copy-project.guard';
 
 @Controller('projects')
 @ApiTags('Projects')
-@UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class ProjectsController {
     constructor(private readonly projectsService: ProjectsService) {}
@@ -199,7 +195,6 @@ export class ProjectsController {
     })
     async remove(//TODO: Do test with project assets
         @Param('id') id: number,
-        @UserId() userId: number,
     ): Promise<{ message: string }> {
         await this.projectsService.delete(id);
         return { message: 'Project deleted successfully' };
@@ -337,7 +332,7 @@ export class ProjectsController {
     @ApiResponse({
         status: HttpStatus.OK,
         description: 'Asset successfully removed and project updated',
-        type: Project, // Повертаємо оновлений проект
+        type: Project,
     })
     @ApiResponse({
         status: HttpStatus.NOT_FOUND,

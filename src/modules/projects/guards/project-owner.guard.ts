@@ -28,9 +28,7 @@ export class ProjectOwnerGuard implements CanActivate {
             throw new NotFoundException('Invalid project ID');
         }
 
-        console.log(`Project ${request.params.id}`);
         const project = await this.projectsService.findById(projectId, SERIALIZATION_GROUPS.DETAILED, false);
-        console.log(`Project: `, project);
 
         if (!project) {
             throw new NotFoundException('Project not found');

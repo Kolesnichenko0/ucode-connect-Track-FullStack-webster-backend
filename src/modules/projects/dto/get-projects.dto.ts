@@ -1,6 +1,5 @@
 // src/core/projects/dto/get-projects.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
 import { BooleanTransform } from 'src/common/transformers/boolean.transformer';
 import { IsBooleanField, IsName } from 'src/common/validators';
 
