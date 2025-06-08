@@ -244,7 +244,6 @@ export class UsersService {
         fileKey: string,
     ): Promise<User> {
         const user = await this.findByIdWithAvatar(id);
-        console.log('User avatar fileKey:', user.avatarFile?.fileKey);
 
         let result: User = user;
         if (user.avatarFile && user.avatarFile.fileKey === fileKey) {

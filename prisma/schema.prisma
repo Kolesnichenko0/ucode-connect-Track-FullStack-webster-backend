@@ -31,7 +31,7 @@ model User {
   refreshTokenNonces RefreshTokenNonce[] @relation("UserRefreshTokens")
   authoredFiles      File[]              @relation("FileAuthor")
   // externalAccounts   ExternalAccount[]    @relation("UserExternalAccounts")
-  // projects           Project[]            @relation("UserProjects")
+  projects           Project[]           @relation("UserProjects")
   // fonts              Font[]               @relation("UserFonts")
 
   @@index([avatarFileId], map: "fk_users_avatar_file_id")
@@ -81,33 +81,33 @@ model File {
   updatedAt  DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
   deletedAt  DateTime?      @map("deleted_at") @db.Timestamp(0)
 
-  author      User?  @relation("FileAuthor", fields: [authorId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  userAvatars User[] @relation("UserAvatarFile")
-  // projectPreviewFor Project? @relation("ProjectPreviewFile")
-  // fontFileFor       Font?    @relation("FontFile")
+  author            User?     @relation("FileAuthor", fields: [authorId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  userAvatars       User[]    @relation("UserAvatarFile")
+  projectPreviewFor Project[] @relation("ProjectPreviewFile")
 
   @@index([authorId], map: "fk_files_author_id")
   @@map("files")
 }
 
-// model Project {
-//   id            Int      @id @default(autoincrement())
-//   authorId        Int?     @map("author_id")
-//   previewFileId Int      @unique(map: "uq_fk_projects_preview_file_id") @map("preview_file_id")
-//   isTemplate    Boolean  @default(false) @map("is_template")
-//   title         String   @db.VarChar(100)
-//   description   String?  @db.Text
-//   content       Json
-//   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(0)
-//   updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+model Project {
+  id            Int      @id @default(autoincrement())
+  authorId      Int?     @map("author_id")
+  previewFileId Int      @map("preview_file_id")
+  isTemplate    Boolean  @default(false) @map("is_template")
+  title         String   @db.VarChar(100)
+  description   String?  @db.Text
+  content       Json
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
 
-//   user        User? @relation("UserProjects", fields: [authorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-//   previewFile File  @relation("ProjectPreviewFile", fields: [previewFileId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  user        User? @relation("UserProjects", fields: [authorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  previewFile File  @relation("ProjectPreviewFile", fields: [previewFileId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
-//   @@index([authorId], map: "fk_projects_author_id")
-//   @@index([authorId, title], map: "idx_projects_author_id_title")
-//   @@map("projects")
-// }
+  @@index([authorId], map: "fk_projects_author_id")
+  @@index([authorId, title], map: "idx_projects_author_id_title")
+  @@index([previewFileId], map: "idx_projects_preview_file_id")
+  @@map("projects")
+}
 
 // model Font {
 //   id        Int      @id @default(autoincrement())

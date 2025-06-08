@@ -5,7 +5,7 @@ import * as path from 'path';
 
 interface UploadFileTypeValidatorOptions {
   allowedMimeTypes: string[];
-  allowedExtentions: string[]
+    allowedExtensions: string[]
 }
 
 export class UploadFileTypeValidator extends FileValidator<
@@ -13,14 +13,14 @@ export class UploadFileTypeValidator extends FileValidator<
   Express.Multer.File
 > {
   private allowedMimeTypes: string[];
-  private allowedExtentions: string[];
+  private allowedExtensions: string[];
 
   constructor(
     protected readonly validationOptions: UploadFileTypeValidatorOptions,
   ) {
     super(validationOptions);
     this.allowedMimeTypes = this.validationOptions.allowedMimeTypes;
-    this.allowedExtentions = this.validationOptions.allowedExtentions;
+    this.allowedExtensions = this.validationOptions.allowedExtensions;
   }
 
   public async isValid(
@@ -62,7 +62,7 @@ export class UploadFileTypeValidator extends FileValidator<
   }
 
   public buildErrorMessage(): string {
-    return `Upload not allowed. Upload only files of type: ${this.allowedExtentions.join(
+    return `Upload not allowed. Upload only files of type: ${this.allowedExtensions.join(
       ', ',
     )}`;
   }
@@ -70,7 +70,7 @@ export class UploadFileTypeValidator extends FileValidator<
   async validateFile(file: Express.Multer.File): Promise<boolean> {
     const fileExt = path.extname(file.originalname);
 
-    if (!this.allowedExtentions.includes(fileExt)) return false;
+    if (!this.allowedExtensions.includes(fileExt)) return false;
 
     const response = await fromBuffer(file.buffer);
 

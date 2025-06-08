@@ -5,7 +5,6 @@ import {
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
-import { FileTargetType } from '@prisma/client';
 import { FileRepository } from './files.repository';
 import { CreateFileDto } from './dto/create-file.dto';
 import { File } from '@prisma/client';
@@ -13,6 +12,8 @@ import { createReadStream } from 'fs';
 import { StreamableFile } from '@nestjs/common';
 import { FilePathsService } from './file-paths.service';
 import { Response as ExpressResponse } from 'express';
+import { UpdateFileDto } from './dto/update-file.dto'
+import { FileTargetType } from '@prisma/client';
 
 @Injectable()
 export class FilesService {
@@ -51,12 +52,36 @@ export class FilesService {
         );
     }
 
+    async findByFileKeyAndTargetType(
+        fileKey: string,
+        targetType: FileTargetType,
+        targetId: number,
+        includeSoftDeleted: boolean = false,
+    ): Promise<File | null> {
+        return this.fileRepository.findByFileKeyAndTargetType(
+            fileKey,
+            targetType,
+            targetId,
+            includeSoftDeleted,
+        );
+    }
+
     async findAllByAuthorId(
         authorId: number,
         includeSoftDeleted: boolean = false,
     ): Promise<File[]> {
         return this.fileRepository.findAllByAuthorId(
             authorId,
+            includeSoftDeleted,
+        );
+    }
+
+    async findAllByTargetId(
+        targetId: number,
+        includeSoftDeleted: boolean = false,
+    ): Promise<File[]> {
+        return this.fileRepository.findAllByTargetId(
+            targetId,
             includeSoftDeleted,
         );
     }
@@ -94,6 +119,10 @@ export class FilesService {
         return file;
     }
 
+    async updateFile(id: number, updateFileDto: UpdateFileDto): Promise<File> {
+        return this.fileRepository.update(id, updateFileDto)
+    }
+
     async softDelete(id: number): Promise<void> {
         await this.findById(id);
 
@@ -120,14 +149,14 @@ export class FilesService {
             switch (file.targetType) {
                 case FileTargetType.USER_AVATAR:
                 case FileTargetType.FONT_ASSET:
-                case FileTargetType.PROJECT_PREVIEW: {
+                case FileTargetType.PROJECT_PREVIEW:
+                case FileTargetType.PROJECT_ASSET:
+                default: {
                     throw new ConflictException(
                         'Cannot delete file. Please use the specific delete method for this target type.',
                     );
                 }
-                case FileTargetType.PROJECT_ASSET: //TODO: Add specific delete method for this target type in projects module
-                default:
-                    break;
+
             }
         }
 

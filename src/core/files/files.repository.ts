@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../db/database.service';
 import { CreateFileDto } from './dto/create-file.dto';
 import { File, FileTargetType } from '@prisma/client';
+import { UpdateFileDto } from './dto/update-file.dto';
 
 @Injectable()
 export class FileRepository {
@@ -51,6 +52,22 @@ export class FileRepository {
         });
     }
 
+    async findByFileKeyAndTargetType(
+        fileKey: string,
+        targetType: FileTargetType,
+        targetId: number,
+        includeSoftDeleted: boolean = false,
+    ): Promise<File | null> {
+        return this.db.file.findUnique({
+            where: {
+                fileKey,
+                targetType,
+                targetId,
+                ...(includeSoftDeleted ? {} : { deletedAt: null }),
+            },
+        });
+    }
+
     async findAllByAuthorId(
         authorId: number,
         includeSoftDeleted: boolean = false,
@@ -58,6 +75,19 @@ export class FileRepository {
         return this.db.file.findMany({
             where: {
                 authorId,
+                ...(includeSoftDeleted ? {} : { deletedAt: null }),
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+
+    async findAllByTargetId(
+        targetId: number,
+        includeSoftDeleted: boolean = false,
+    ): Promise<File[]> {
+        return this.db.file.findMany({
+            where: {
+                targetId,
                 ...(includeSoftDeleted ? {} : { deletedAt: null }),
             },
             orderBy: { createdAt: 'desc' },
@@ -88,7 +118,7 @@ export class FileRepository {
         });
     }
 
-    async update(id: number, data: any): Promise<File> {
+    async update(id: number, data: UpdateFileDto): Promise<File> {
         return this.db.file.update({
             where: { id },
             data,
