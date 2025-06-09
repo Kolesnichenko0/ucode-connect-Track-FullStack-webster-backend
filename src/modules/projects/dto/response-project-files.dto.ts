@@ -2,7 +2,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { File } from '../../../core/files/entities/file.entity'
 
-export class ProjectFilesResponseDto {
+export class ResponseProjectFilesDto {
     @ApiProperty({
         description: 'Array of project files',
         type: [File]

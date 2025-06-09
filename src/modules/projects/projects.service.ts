@@ -10,7 +10,7 @@ import { ProjectsRepository } from './projects.repository';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { GetProjectsDto } from './dto/get-projects.dto'; //TODO: где должжна быть эта ДТОшка
-import { ProjectFilesResponseDto } from './dto/project-files-response.dto';
+import { ResponseProjectFilesDto } from './dto/response-project-files.dto';
 import { CopyProjectResponseDto } from './dto/copy-project-response.dto';
 import { SERIALIZATION_GROUPS, Project } from './entities/project.entity';
 import { FilesService } from '../../core/files/files.service';
@@ -21,6 +21,10 @@ import { File as PrismaFile, FileTargetType } from '@prisma/client';
 import * as fsPromises from 'fs/promises';
 import { isUUID } from 'class-validator';
 import { convertBase64ToFile, isBase64Image } from '../../common/utils';
+import { GetProjectsCursorDto } from './dto/get-projects-cursor.dto';
+import { ProjectsPaginationRepository } from './projects-pagination.repository';
+import { CursorPaginationResult, ProjectCursor } from '../../common/pagination/cursor';
+import { GetTemplatesCursorDto } from './dto/get-templates-cursor.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -34,6 +38,7 @@ export class ProjectsService {
         private readonly filesService: FilesService,
         private readonly fileUploadService: FileUploadService,
         private readonly filePathsService: FilePathsService,
+        private readonly projectsPaginationRepository: ProjectsPaginationRepository
     ) {}
 
     async create(dto: CreateProjectDto, authorId?: number): Promise<Project> {
@@ -56,46 +61,46 @@ export class ProjectsService {
         return this.resolveFileKeysToUrls(project);
     }
 
-    async findAllTemplates(): Promise<{ projects: Project[]; total: number }> {
-        const { projects, total } =
-            await this.projectsRepository.findAllTemplates();
+    async findAllTemplates(filters: GetTemplatesCursorDto): Promise<CursorPaginationResult<Project, ProjectCursor>> {
+        const result =
+            await this.projectsPaginationRepository.findAllTemplatesWithCursor(filters);
 
         const enrichedProjects = await Promise.all(
-            projects.map((project) =>
+            result.items.map((project) =>
                 this.enrichProjectWithPreviewUrl(project),
             ),
         );
 
         return {
-            projects: enrichedProjects.map((project) =>
+            ...result,
+            items: enrichedProjects.map((project) =>
                 plainToInstance(Project, project, {
                     groups: SERIALIZATION_GROUPS.BASIC,
                 }),
             ),
-            total,
         };
     }
 
     async findByAuthorId(
         authorId: number,
-        filters: GetProjectsDto,
-    ): Promise<{ projects: Project[]; total: number }> {
-        const { projects, total } =
-            await this.projectsRepository.findByAuthorId(authorId, filters);
+        filters: GetProjectsCursorDto,
+    ): Promise<CursorPaginationResult<Project, ProjectCursor>> {
+        const result =
+            await this.projectsPaginationRepository.findByAuthorIdWithCursor(authorId, filters);
 
         const enrichedProjects = await Promise.all(
-            projects.map((project) =>
+            result.items.map((project) =>
                 this.enrichProjectWithPreviewUrl(project),
             ),
         );
 
         return {
-            projects: enrichedProjects.map((project) =>
+            ...result,
+            items: enrichedProjects.map((project) =>
                 plainToInstance(Project, project, {
                     groups: SERIALIZATION_GROUPS.BASIC,
                 }),
             ),
-            total,
         };
     }
 
@@ -190,7 +195,7 @@ export class ProjectsService {
     }
 
     async delete(id: number): Promise<void> {
-        const projectFiles: ProjectFilesResponseDto =
+        const projectFiles: ResponseProjectFilesDto =
             await this.getProjectFiles(id);
 
         projectFiles.files.map((file) =>
@@ -240,7 +245,7 @@ export class ProjectsService {
         };
     }
 
-    async getProjectAssetsFiles(id: number): Promise<ProjectFilesResponseDto> {
+    async getProjectAssetsFiles(id: number): Promise<ResponseProjectFilesDto> {
         await this.findById(id);
 
         const files: PrismaFile[] =
@@ -262,7 +267,7 @@ export class ProjectsService {
         };
     }
 
-    async getProjectFiles(id: number): Promise<ProjectFilesResponseDto> {
+    async getProjectFiles(id: number): Promise<ResponseProjectFilesDto> {
         await this.findById(id);
 
         const files: PrismaFile[] =
@@ -285,7 +290,7 @@ export class ProjectsService {
         id: number,
         files: Express.Multer.File[],
         authorId?: number,
-    ): Promise<ProjectFilesResponseDto> {
+    ): Promise<ResponseProjectFilesDto> {
         await this.findById(id);
 
         const uploadResults = await this.fileUploadService.uploadMany(files, {

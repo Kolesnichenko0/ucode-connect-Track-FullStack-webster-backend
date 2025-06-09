@@ -42,6 +42,9 @@ import { GetProjectsDto } from '../../modules/projects/dto/get-projects.dto';
 import { Project, ProjectWithBasic } from '../../modules/projects/entities/project.entity';
 
 import { FileOwnerGuard } from '../files/guards/file-owner.guard';
+import { GetProjectsCursorDto } from '../../modules/projects/dto/get-projects-cursor.dto';
+import { CursorPaginationResult, ProjectCursor } from '../../common/pagination/cursor';
+import { AfterCursorQueryParseInterceptor } from '../../common/interceptors/after-cursor.interceptor';
 
 @Controller('users')
 @ApiTags('Users')
@@ -434,6 +437,7 @@ export class UsersController {
 
     @Get(':id/projects')
     @UseGuards(AccountOwnerGuard)
+    @UseInterceptors(AfterCursorQueryParseInterceptor)
     @ApiOperation({ summary: 'Get user projects' })
     @ApiParam({
         name: 'id',
@@ -479,14 +483,12 @@ export class UsersController {
     })
     async getUserProjects(
         @Param('id') id: number,
-        @Query() getProjectsDto: GetProjectsDto,
-    ): Promise<{
-        projects: ProjectWithBasic[];
-        total: number;
-    }> {
+        @Query() query: GetProjectsCursorDto
+    ): Promise<CursorPaginationResult<Project, ProjectCursor>> {
+        console.log("query", query)
         await this.usersService.findById(id);
 
-        return this.projectsService.findByAuthorId(id, getProjectsDto);
+        return this.projectsService.findByAuthorId(id, query);
     }
 
     @Delete(':id/avatar/:fileKey')

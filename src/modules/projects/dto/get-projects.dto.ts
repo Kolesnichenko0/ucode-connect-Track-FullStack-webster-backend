@@ -1,23 +1,24 @@
 // src/core/projects/dto/get-projects.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { BooleanTransform } from 'src/common/transformers/boolean.transformer';
-import { IsBooleanField, IsName } from 'src/common/validators';
+import { IsName } from 'src/common/validators';
+import { CursorPaginationDto, CursorType, ProjectCursor } from '../../../common/pagination/cursor';
+import { IsOptional, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
-export class GetProjectsDto {
+export class GetProjectsDto extends CursorPaginationDto<ProjectCursor>{
     @ApiProperty({
-        description: 'Filter by template status',
-        example: false,
-        required: false
+        description: 'Cursor for pagination. Object with `id` and `updatedAt` of the last project.',
+        required: false,
+        type: () => ProjectCursor,
     })
-    @BooleanTransform()
-    @IsBooleanField(true)
-    is_template?: boolean;
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => ProjectCursor)
+    declare after?: ProjectCursor;
 
-    @ApiProperty({
-        description: 'Search by project title',
-        example: 'design',
-        required: false
-    })
+    @ApiProperty({ description: 'Search by project title', required: false })
     @IsName(true, false)
     title?: string;
+
+    type: CursorType = CursorType.PROJECT;
 }

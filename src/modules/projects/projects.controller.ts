@@ -11,7 +11,7 @@ import {
     HttpStatus,
     ParseIntPipe,
     UploadedFiles,
-    UseInterceptors, HttpCode, ParseUUIDPipe,
+    UseInterceptors, HttpCode, ParseUUIDPipe, Query,
 } from '@nestjs/common';
 import {
     ApiTags,
@@ -26,7 +26,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { ProjectFilesResponseDto } from './dto/project-files-response.dto';
+import { ResponseProjectFilesDto } from './dto/response-project-files.dto';
 import { CopyProjectResponseDto } from './dto/copy-project-response.dto';
 import { Project } from './entities/project.entity';
 import { ProjectOwnerGuard } from './guards/project-owner.guard';
@@ -38,6 +38,10 @@ import {
 } from '../../core/file-upload/constants/file-upload.contsants';
 import { ParseFilesPipe } from '../../common/pipes/parse-files.pipe';
 import { CanCopyProjectGuard } from './guards/can-copy-project.guard';
+import { GetProjectsCursorDto } from './dto/get-projects-cursor.dto';
+import { GetTemplatesCursorDto } from './dto/get-templates-cursor.dto';
+import { CursorPaginationResult, ProjectCursor } from '../../common/pagination/cursor';
+import { AfterCursorQueryParseInterceptor } from '../../common/interceptors/after-cursor.interceptor';
 
 @Controller('projects')
 @ApiTags('Projects')
@@ -46,6 +50,7 @@ export class ProjectsController {
     constructor(private readonly projectsService: ProjectsService) {}
 
     @Get('templates')
+    @UseInterceptors(AfterCursorQueryParseInterceptor)
     @ApiOperation({ summary: 'Get all system templates' })
     @ApiQuery({
         name: 'page',
@@ -81,11 +86,11 @@ export class ProjectsController {
         status: HttpStatus.UNAUTHORIZED,
         description: 'Unauthorized access',
     })
-    async findAllTemplates(): Promise<{
-        projects: Project[];
-        total: number;
-    }> {
-        return this.projectsService.findAllTemplates();
+    async findAllTemplates(
+        @Query() query: GetTemplatesCursorDto,
+    ): Promise<CursorPaginationResult<Project, ProjectCursor>> {
+        console.log(query);
+        return this.projectsService.findAllTemplates(query);
     }
 
     @Get(':id')
@@ -110,8 +115,7 @@ export class ProjectsController {
         status: HttpStatus.FORBIDDEN,
         description: 'Access denied',
     })
-    async findById(
-        @Param('id') id: number): Promise<Project> {
+    async findById(@Param('id') id: number): Promise<Project> {
         return this.projectsService.findById(id);
     }
 
@@ -193,7 +197,8 @@ export class ProjectsController {
         status: HttpStatus.FORBIDDEN,
         description: 'Access denied',
     })
-    async remove(//TODO: Do test with project assets
+    async remove(
+        //TODO: Do test with project assets
         @Param('id') id: number,
     ): Promise<{ message: string }> {
         await this.projectsService.delete(id);
@@ -212,7 +217,7 @@ export class ProjectsController {
     @ApiResponse({
         status: HttpStatus.OK,
         description: 'Project files successfully retrieved',
-        type: ProjectFilesResponseDto,
+        type: ResponseProjectFilesDto,
     })
     @ApiResponse({
         status: HttpStatus.NOT_FOUND,
@@ -224,7 +229,7 @@ export class ProjectsController {
     })
     async getProjectFiles(
         @Param('id') id: number,
-    ): Promise<ProjectFilesResponseDto> {
+    ): Promise<ResponseProjectFilesDto> {
         return this.projectsService.getProjectAssetsFiles(id);
     }
 
@@ -242,7 +247,7 @@ export class ProjectsController {
     @ApiResponse({
         status: HttpStatus.CREATED,
         description: 'Files successfully added to project',
-        type: ProjectFilesResponseDto,
+        type: ResponseProjectFilesDto,
     })
     @ApiResponse({
         status: HttpStatus.NOT_FOUND,
@@ -262,14 +267,15 @@ export class ProjectsController {
             new ParseFilesPipe({
                 maxCount: 10,
                 optional: false,
-                validators: [
-                    UploadFileTypeValidator,
-                    UploadFileSizeValidator,
-                ],
+                validators: [UploadFileTypeValidator, UploadFileSizeValidator],
                 optionsForEachValidator: [
                     {
-                        allowedMimeTypes: [...UPLOAD_ALLOWED_FILE_MIME_TYPES.PROJECT_ASSET],
-                        allowedExtensions: [...UPLOAD_ALLOWED_FILE_EXTENSIONS.PROJECT_ASSET],
+                        allowedMimeTypes: [
+                            ...UPLOAD_ALLOWED_FILE_MIME_TYPES.PROJECT_ASSET,
+                        ],
+                        allowedExtensions: [
+                            ...UPLOAD_ALLOWED_FILE_EXTENSIONS.PROJECT_ASSET,
+                        ],
                     },
                     {
                         maxSize: UPLOAD_ALLOWED_MAX_FILE_SIZES.PROJECT_ASSET,
@@ -279,7 +285,7 @@ export class ProjectsController {
         )
         files: Express.Multer.File[],
         @UserId() userId: number,
-    ): Promise<ProjectFilesResponseDto> {
+    ): Promise<ResponseProjectFilesDto> {
         return this.projectsService.addFilesToProject(id, files, userId);
     }
 
@@ -316,7 +322,10 @@ export class ProjectsController {
     @Delete(':id/files/:fileKey')
     @UseGuards(ProjectOwnerGuard)
     @HttpCode(HttpStatus.OK)
-    @ApiOperation({ summary: 'Remove an asset from a project and replace it with a default placeholder' })
+    @ApiOperation({
+        summary:
+            'Remove an asset from a project and replace it with a default placeholder',
+    })
     @ApiParam({
         name: 'id',
         type: 'number',
@@ -348,7 +357,8 @@ export class ProjectsController {
     })
     async removeAssetFromProject(
         @Param('id', ParseIntPipe) projectId: number,
-        @Param('fileKey', new ParseUUIDPipe({ version: '4' })) fileKeyToRemove: string,
+        @Param('fileKey', new ParseUUIDPipe({ version: '4' }))
+        fileKeyToRemove: string,
         @UserId() userId: number,
     ): Promise<Project> {
         return this.projectsService.removeAssetAndUpdateContent(

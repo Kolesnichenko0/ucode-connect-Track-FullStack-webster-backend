@@ -5,6 +5,7 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { GetProjectsDto } from './dto/get-projects.dto';
 import { Project } from '@prisma/client';
+import { GetProjectsCursorDto } from './dto/get-projects-cursor.dto';
 
 @Injectable()
 export class ProjectsRepository {
@@ -38,7 +39,7 @@ export class ProjectsRepository {
 
     async findByAuthorId(
         authorId: number,
-        filters: GetProjectsDto,
+        filters: GetProjectsCursorDto,
     ): Promise<{ projects: Project[]; total: number }> {
         const { is_template, title} = filters;
 
