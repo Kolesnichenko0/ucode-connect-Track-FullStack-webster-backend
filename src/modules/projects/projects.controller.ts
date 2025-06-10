@@ -26,7 +26,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { ResponseProjectFilesDto } from './dto/response-project-files.dto';
+import { ProjectFilesResponseDto } from './dto/project-files-response.dto';
 import { CopyProjectResponseDto } from './dto/copy-project-response.dto';
 import { Project } from './entities/project.entity';
 import { ProjectOwnerGuard } from './guards/project-owner.guard';
@@ -215,7 +215,7 @@ export class ProjectsController {
     @ApiResponse({
         status: HttpStatus.OK,
         description: 'Project files successfully retrieved',
-        type: ResponseProjectFilesDto,
+        type: ProjectFilesResponseDto,
     })
     @ApiResponse({
         status: HttpStatus.NOT_FOUND,
@@ -227,7 +227,7 @@ export class ProjectsController {
     })
     async getProjectFiles(
         @Param('id') id: number,
-    ): Promise<ResponseProjectFilesDto> {
+    ): Promise<ProjectFilesResponseDto> {
         return this.projectsService.getProjectAssetsFiles(id);
     }
 
@@ -245,7 +245,7 @@ export class ProjectsController {
     @ApiResponse({
         status: HttpStatus.CREATED,
         description: 'Files successfully added to project',
-        type: ResponseProjectFilesDto,
+        type: ProjectFilesResponseDto,
     })
     @ApiResponse({
         status: HttpStatus.NOT_FOUND,
@@ -283,7 +283,7 @@ export class ProjectsController {
         )
         files: Express.Multer.File[],
         @UserId() userId: number,
-    ): Promise<ResponseProjectFilesDto> {
+    ): Promise<ProjectFilesResponseDto> {
         return this.projectsService.addFilesToProject(id, files, userId);
     }
 

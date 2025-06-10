@@ -10,7 +10,7 @@ import { ProjectsRepository } from './projects.repository';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { GetProjectsCursorDto } from './dto/get-projects-cursor.dto'; //TODO: где должжна быть эта ДТОшка
-import { ResponseProjectFilesDto } from './dto/response-project-files.dto';
+import { ProjectFilesResponseDto } from './dto/project-files-response.dto';
 import { CopyProjectResponseDto } from './dto/copy-project-response.dto';
 import { SERIALIZATION_GROUPS, Project } from './entities/project.entity';
 import { FilesService } from '../../core/files/files.service';
@@ -195,7 +195,7 @@ export class ProjectsService {
     }
 
     async delete(id: number): Promise<void> {
-        const projectFiles: ResponseProjectFilesDto =
+        const projectFiles: ProjectFilesResponseDto =
             await this.getProjectFiles(id);
 
         projectFiles.files.map((file) =>
@@ -245,7 +245,7 @@ export class ProjectsService {
         };
     }
 
-    async getProjectAssetsFiles(id: number): Promise<ResponseProjectFilesDto> {
+    async getProjectAssetsFiles(id: number): Promise<ProjectFilesResponseDto> {
         await this.findById(id);
 
         const files: PrismaFile[] =
@@ -267,7 +267,7 @@ export class ProjectsService {
         };
     }
 
-    async getProjectFiles(id: number): Promise<ResponseProjectFilesDto> {
+    async getProjectFiles(id: number): Promise<ProjectFilesResponseDto> {
         await this.findById(id);
 
         const files: PrismaFile[] =
@@ -290,7 +290,7 @@ export class ProjectsService {
         id: number,
         files: Express.Multer.File[],
         authorId?: number,
-    ): Promise<ResponseProjectFilesDto> {
+    ): Promise<ProjectFilesResponseDto> {
         await this.findById(id);
 
         const uploadResults = await this.fileUploadService.uploadMany(files, {
