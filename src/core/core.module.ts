@@ -11,6 +11,7 @@ import { JwtModule } from './jwt/jwt.module';
 import { HashingModule } from './hashing/hashing.module';
 import { FilesModule } from './files/files.module';
 import { FileUploadModule } from './file-upload/file-upload.module';
+import { UnsplashModule } from './unsplash/unsplash.module';
 
 @Module({
     imports: [
@@ -24,6 +25,7 @@ import { FileUploadModule } from './file-upload/file-upload.module';
         JwtModule,
         RefreshTokenNoncesModule,
         UsersModule,
+        UnsplashModule
     ],
 })
 export class CoreModule { }

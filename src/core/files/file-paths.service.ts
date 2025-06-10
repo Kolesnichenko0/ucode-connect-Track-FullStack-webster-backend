@@ -4,16 +4,15 @@ import { FileTargetType } from '@prisma/client';
 import { ApiConfigService } from 'src/config/api-config.service';
 import { File } from './entities/file.entity';
 import { buildFilePath, buildUrl } from '../../common/utils';
-import { FilesService } from './files.service';
 
 interface FileTypeConfig {
-    storagePath: string;
+    storagePath?: string;
     assetPath?: string;
     assetServerUrl?: string;
 }
 
 interface ConfigMapping {
-    storagePathKey: string;
+    storagePathKey?: string;
     assetPathKey?: string;
     assetUrlKey?: string;
 }
@@ -28,8 +27,8 @@ export class FilePathsService {
         },
         [FileTargetType.PROJECT_ASSET]: {
             storagePathKey: 'storage.paths.uploads.projectAssets',
-            assetPathKey: 'assets.paths.projects',
-            assetUrlKey: 'assets.serverUrls.projects',
+            assetPathKey: 'assets.paths.projectAssets',
+            assetUrlKey: 'assets.serverUrls.projectAssets',
         },
         [FileTargetType.PROJECT_PREVIEW]: {
             storagePathKey: 'storage.paths.uploads.projectPreviews',
@@ -39,14 +38,20 @@ export class FilePathsService {
         [FileTargetType.FONT_ASSET]: {
             storagePathKey: 'storage.paths.uploads.fontAssets',
         },
+        [FileTargetType.PROJECT_BACKGROUND]: {
+            assetPathKey: 'assets.paths.projectBackgrounds',
+            assetUrlKey: 'assets.serverUrls.projectBackgrounds',
+        },
+        [FileTargetType.PROJECT_ELEMENT]: {
+            assetPathKey: 'assets.paths.projectElements',
+            assetUrlKey: 'assets.serverUrls.projectElements',
+        },
     };
 
     private fileConfigs: Record<FileTargetType, FileTypeConfig>;
     private storageFilesServerUrl: string;
 
-    constructor(
-        private readonly cs: ApiConfigService,
-    ) {
+    constructor(private readonly cs: ApiConfigService) {
         this.initializeConfig();
     }
 
@@ -60,8 +65,9 @@ export class FilePathsService {
             const mapping = this.configMapping[targetType];
 
             this.fileConfigs[targetType] = {
-                storagePath: this.cs.get(mapping.storagePathKey as any),
-
+                storagePath: mapping.storagePathKey
+                    ? this.cs.get(mapping.storagePathKey as any)
+                    : undefined,
                 assetPath: mapping.assetPathKey
                     ? this.cs.get(mapping.assetPathKey as any)
                     : undefined,
@@ -90,6 +96,11 @@ export class FilePathsService {
             return config.assetPath;
         }
 
+        if (!config.storagePath) {
+            throw new Error(
+                `No storage path configuration for file type: ${targetType}`,
+            );
+        }
         return config.storagePath;
     }
 
@@ -118,7 +129,10 @@ export class FilePathsService {
                     `No asset server URL configuration for file type: ${file.targetType}`,
                 );
             }
-            return buildUrl(config.assetServerUrl, `${file.fileKey}.${file.extension}`);
+            return buildUrl(
+                config.assetServerUrl,
+                `${file.fileKey}.${file.extension}`,
+            );
         } else {
             return buildUrl(this.storageFilesServerUrl, file.fileKey);
         }
@@ -128,18 +142,29 @@ export class FilePathsService {
         return targetType in this.fileConfigs;
     }
 
+    getSupportedTargetTypes(): FileTargetType[] {
+        return Object.keys(this.fileConfigs) as FileTargetType[];
+    }
+
     isSupportedDefaultFiles(targetType: FileTargetType): boolean {
         const config = this.fileConfigs[targetType];
         return !!(config?.assetPath && config?.assetServerUrl);
     }
 
-    getSupportedTargetTypes(): FileTargetType[] {
-        return Object.keys(this.fileConfigs) as FileTargetType[];
-    }
-
     getTargetTypesWithDefaultSupport(): FileTargetType[] {
         return this.getSupportedTargetTypes().filter((type) =>
             this.isSupportedDefaultFiles(type),
+        );
+    }
+
+    isSupportedStorageFiles(targetType: FileTargetType): boolean {
+        const config = this.fileConfigs[targetType];
+        return !!config?.storagePath;
+    }
+
+    getTargetTypesWithStorageSupport(): FileTargetType[] {
+        return this.getSupportedTargetTypes().filter((type) =>
+            this.isSupportedStorageFiles(type),
         );
     }
 }

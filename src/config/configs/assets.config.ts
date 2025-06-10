@@ -10,15 +10,21 @@ const AssetsSchema = z.object({
     ASSETS_PUBLIC_PATH: z.string().default('public'),
     ASSETS_BASE_PATH: z.string().default('assets'),
     ASSETS_LOGO_FILENAME: z.string().default('logo.png'),
+    ASSETS_DEFAULT_PROJECT_ASSET_KEY: z.string().default('default-project-asset'),
+    ASSETS_DEFAULT_PROJECT_PREVIEW_KEY: z.string().default('default-project-preview'),
 });
 
 export type IAssetsConfig = ReturnType<typeof getAssetsConfig>;
 
+const BASE_IMAGES_PATH = 'images';
+const BASE_PROJECT_PATH = `${BASE_IMAGES_PATH}/project`;
 const ASSET_CATEGORIES = {
-    projects: 'images/project-photos',
-    projectPreviews: 'images/project-previews',
-    logos: 'images/logos',
-    userAvatars: 'images/user-avatars',
+    projectBackgrounds: `${BASE_PROJECT_PATH}/backgrounds`,
+    projectPreviews: `${BASE_PROJECT_PATH}/previews`,
+    projectElements: `${BASE_PROJECT_PATH}/elements`,
+    projectAssets: `${BASE_PROJECT_PATH}/photos`,
+    logos: `${BASE_IMAGES_PATH}/logos`,
+    userAvatars: `${BASE_IMAGES_PATH}/user-avatars`,
 };
 
 const getAssetsConfig = () => {
@@ -62,6 +68,10 @@ const getAssetsConfig = () => {
             publicPath: config.ASSETS_PUBLIC_PATH,
             filenames: {
                 logo: config.ASSETS_LOGO_FILENAME,
+            },
+            defaultKeys: {
+                projectAsset: config.ASSETS_DEFAULT_PROJECT_ASSET_KEY,
+                projectPreview: config.ASSETS_DEFAULT_PROJECT_PREVIEW_KEY,
             },
             paths: {
                 base: basePublicAssetsPath,

@@ -2,7 +2,6 @@
 import { z } from 'zod';
 import { ConfigValidator } from '../config.validator';
 import getAppConfig from './app.config';
-import { FileTargetType } from '@prisma/client';
 import { buildFilePath, buildUrl, normalizeFilePath } from '../../common/utils';
 
 const appConfig = getAppConfig();
@@ -18,20 +17,6 @@ export const STORAGE_UPLOAD_CATEGORIES = {
     projectAssets: 'project-assets',
     projectPreviews: 'project-previews',
     fontAssets: 'font-assets',
-};
-
-export const UPLOAD_CATEGORY_TO_TARGET_TYPE: Record<string, FileTargetType> = {
-    [STORAGE_UPLOAD_CATEGORIES.userAvatars]: FileTargetType.USER_AVATAR,
-    [STORAGE_UPLOAD_CATEGORIES.projectAssets]: FileTargetType.PROJECT_ASSET,
-    [STORAGE_UPLOAD_CATEGORIES.projectPreviews]: FileTargetType.PROJECT_PREVIEW,
-    [STORAGE_UPLOAD_CATEGORIES.fontAssets]: FileTargetType.FONT_ASSET,
-};
-
-export const TARGET_TYPE_TO_UPLOAD_CATEGORY: Record<FileTargetType, string> = {
-    [FileTargetType.USER_AVATAR]: STORAGE_UPLOAD_CATEGORIES.userAvatars,
-    [FileTargetType.PROJECT_ASSET]: STORAGE_UPLOAD_CATEGORIES.projectAssets,
-    [FileTargetType.PROJECT_PREVIEW]: STORAGE_UPLOAD_CATEGORIES.projectPreviews,
-    [FileTargetType.FONT_ASSET]: STORAGE_UPLOAD_CATEGORIES.fontAssets,
 };
 
 const getStorageConfig = () => {
