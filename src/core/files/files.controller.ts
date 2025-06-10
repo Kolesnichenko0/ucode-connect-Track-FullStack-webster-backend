@@ -17,28 +17,9 @@ import { FilesService } from './files.service';
 import { FilePathsService } from './file-paths.service';
 import { FileOwnerGuard } from './guards/file-owner.guard';
 import { FileUploadService } from '../file-upload/file-upload.service';
-import { STORAGE_UPLOAD_CATEGORIES } from '../../config/configs/storage.config';
 import { Public } from 'src/common/decorators';
 import { FileTargetType } from '@prisma/client';
 import { FileTargetTypeMapper } from './mappers/file-target-type.mapper';
-
-const CATEGORY_TO_TARGET_TYPE: Record<string, FileTargetType> = {
-    'user-avatars': FileTargetType.USER_AVATAR,
-    'project-assets': FileTargetType.PROJECT_ASSET,
-    'project-previews': FileTargetType.PROJECT_PREVIEW,
-    'project-backgrounds': FileTargetType.PROJECT_BACKGROUND,
-    'project-elements': FileTargetType.PROJECT_ELEMENT,
-    'font-assets': FileTargetType.FONT_ASSET,
-};
-
-const TARGET_TYPE_TO_CATEGORY: Record<FileTargetType, string> = {
-    [FileTargetType.USER_AVATAR]: 'user-avatars',
-    [FileTargetType.PROJECT_ASSET]: 'project-assets',
-    [FileTargetType.PROJECT_PREVIEW]: 'project-previews',
-    [FileTargetType.PROJECT_BACKGROUND]: 'project-backgrounds',
-    [FileTargetType.PROJECT_ELEMENT]: 'project-elements',
-    [FileTargetType.FONT_ASSET]: 'font-assets',
-};
 
 @Controller('files')
 @ApiTags('Files')
