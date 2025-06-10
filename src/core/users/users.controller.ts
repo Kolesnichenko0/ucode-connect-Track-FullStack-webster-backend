@@ -484,7 +484,6 @@ export class UsersController {
         @Param('id') id: number,
         @Query() query: GetProjectsCursorDto
     ): Promise<CursorPaginationResult<Project, ProjectCursor>> {
-        console.log("query", query)
         await this.usersService.findById(id);
 
         return this.projectsService.findByAuthorId(id, query);

@@ -88,7 +88,6 @@ export class ProjectsController {
     async findAllTemplates(
         @Query() query: GetTemplatesDto,
     ): Promise<CursorPaginationResult<Project, ProjectCursor>> {
-        console.log(query);
         return this.projectsService.findAllTemplates(query);
     }
 
