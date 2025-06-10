@@ -10,24 +10,16 @@ import {
     BadRequestException,
     ParseUUIDPipe,
 } from '@nestjs/common';
-import {
-    ApiTags,
-    ApiOperation,
-    ApiParam,
-    ApiResponse,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { Response as ExpressResponse } from 'express';
 import { StreamableFile } from '@nestjs/common';
 import { FilesService } from './files.service';
 import { FilePathsService } from './file-paths.service';
 import { FileOwnerGuard } from './guards/file-owner.guard';
 import { FileUploadService } from '../file-upload/file-upload.service';
-import {
-    UPLOAD_CATEGORY_TO_TARGET_TYPE,
-    TARGET_TYPE_TO_UPLOAD_CATEGORY,
-    STORAGE_UPLOAD_CATEGORIES,
-} from '../../config/configs/storage.config';
 import { Public } from 'src/common/decorators';
+import { FileTargetType } from '@prisma/client';
+import { FileTargetTypeMapper } from './mappers/file-target-type.mapper';
 
 @Controller('files')
 @ApiTags('Files')
@@ -123,7 +115,8 @@ export class FilesController {
                 message: {
                     type: 'string',
                     description: 'Error message',
-                    example: 'File with key a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6 not found or deleted',
+                    example:
+                        'File with key a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6 not found or deleted',
                 },
                 error: {
                     type: 'string',
@@ -244,7 +237,8 @@ export class FilesController {
                 message: {
                     type: 'string',
                     description: 'Error message',
-                    example: 'File with key a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6 not found or deleted',
+                    example:
+                        'File with key a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6 not found or deleted',
                 },
                 error: {
                     type: 'string',
@@ -283,7 +277,11 @@ export class FilesController {
             },
         },
     })
-    async deleteByFileKey(@Param('fileKey', new ParseUUIDPipe({ version: '4' })) fileKey: string): Promise<{ message: string }> {
+    async deleteByFileKey(
+        @Param('fileKey', new ParseUUIDPipe({ version: '4' })) fileKey: string,
+    ): Promise<{
+        message: string;
+    }> {
         await this.filesService.softDeleteByFileKey(fileKey, true);
         return { message: 'File deleted successfully' };
     }
@@ -295,8 +293,8 @@ export class FilesController {
         name: 'targetType',
         type: 'string',
         description: 'Target type for default files',
-        enum: Object.values(STORAGE_UPLOAD_CATEGORIES),
-        example: STORAGE_UPLOAD_CATEGORIES.projectAssets,
+        enum: Object.values(FileTargetType),
+        example: FileTargetTypeMapper.getCategory(FileTargetType.USER_AVATAR)
     })
     @ApiResponse({
         status: HttpStatus.OK,
@@ -306,7 +304,8 @@ export class FilesController {
             items: {
                 type: 'string',
                 description: 'File URL',
-                example: 'https://example.com/assets/user-avatars/default-avatar.png',
+                example:
+                    'https://example.com/assets/user-avatars/default-user-avatar.png',
             },
         },
     })
@@ -319,7 +318,8 @@ export class FilesController {
                 message: {
                     type: 'string',
                     description: 'Error message',
-                    example: 'Invalid target type: invalid-type. Supported types: user-avatars, project-assets',
+                    example:
+                        'Invalid target type: invalid-type. Supported types: user-avatars, project-assets',
                 },
                 error: {
                     type: 'string',
@@ -334,21 +334,23 @@ export class FilesController {
             },
         },
     })
-    async getDefaultFileUrlsByTargetType(@Param('targetType') targetType: string): Promise<string[]> {
-        const enumTargetType = UPLOAD_CATEGORY_TO_TARGET_TYPE[targetType];
-        if (!enumTargetType) {
+    async getDefaultFileUrlsByTargetType(
+        @Param('targetType') targetType: string,
+    ): Promise<string[]> {
+        if(!FileTargetTypeMapper.isValidCategory(targetType)) {
             throw new BadRequestException(
-                `Invalid target type: ${targetType}. Supported types: ${Object.values(STORAGE_UPLOAD_CATEGORIES).join(', ')}`
+                `Invalid target type: ${targetType}. Supported types: ${FileTargetTypeMapper.getAllCategories().join(', ')}`,
             );
         }
+        const enumTargetType = FileTargetTypeMapper.getTargetType(targetType) as FileTargetType;
 
         if (!this.filePathsService.isSupportedDefaultFiles(enumTargetType)) {
-            const supportedTypes = this.filePathsService
-                .getTargetTypesWithDefaultSupport()
-                .map(type => TARGET_TYPE_TO_UPLOAD_CATEGORY[type]);
+            const supportedTypes = FileTargetTypeMapper.mapTargetTypesToCategories(
+                this.filePathsService.getTargetTypesWithDefaultSupport()
+            );
 
             throw new BadRequestException(
-                `Target type '${targetType}' does not support default files. Supported types: ${supportedTypes.join(', ')}`
+                `Target type '${targetType}' does not support default files. Supported types: ${supportedTypes.join(', ')}`,
             );
         }
 

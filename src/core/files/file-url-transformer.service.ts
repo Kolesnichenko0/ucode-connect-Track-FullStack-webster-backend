@@ -54,7 +54,7 @@ export class FileUrlTransformerService {
         obj: Record<string, any>,
         config: FileFieldConfig,
     ): Promise<void> {
-        const { fileIdField, fileObjectField, urlField } = config;
+        const { fileIdField, fileObjectField, urlField, fileKeyField } = config;
 
         try {
             let file: File | null = null;
@@ -73,6 +73,10 @@ export class FileUrlTransformerService {
             if (file) {
                 fileUrl = this.filePathsService.getFileUrl(file);
                 obj[urlField] = fileUrl;
+
+                if (fileKeyField && file.fileKey) {
+                    obj[fileKeyField] = file.fileKey;
+                }
             } else {
                 obj[urlField] = null;
             }
@@ -88,6 +92,9 @@ export class FileUrlTransformerService {
             );
 
             obj[urlField] = null;
+            if (fileKeyField) {
+                obj[fileKeyField] = null;
+            }
             delete obj[fileIdField];
             if (fileObjectField) {
                 delete obj[fileObjectField];
@@ -124,11 +131,13 @@ export class FileUrlTransformerService {
         fileIdField: string,
         urlField: string,
         fileObjectField?: string,
+        fileKeyField?: string,
     ): FileFieldConfig {
         return {
             fileIdField,
             fileObjectField,
             urlField,
+            fileKeyField,
         };
     }
 
@@ -137,18 +146,19 @@ export class FileUrlTransformerService {
             'avatarFileId',
             'avatarFileURL',
             'avatarFile',
+            'avatarFileKey',
         ),
 
         PROJECT_PREVIEW: FileUrlTransformerService.createConfig(
             'previewFileId',
             'previewFileURL',
-            'previewFile',
+            'previewFile'
         ),
 
         FONT_ASSET: FileUrlTransformerService.createConfig(
             'fileId',
             'fileURL',
-            'file',
+            'file'
         ),
     } as const;
 }

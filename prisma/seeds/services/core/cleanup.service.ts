@@ -1,9 +1,9 @@
 // prisma/seeds/services/cleanup.service.ts
-import { cleanupDirectory, cleanupDirectoryExcept, directoryExists } from '../../../src/common/utils';
+import { cleanupDirectory, cleanupDirectoryExcept, directoryExists } from '../../../../src/common/utils';
 import { BaseSeederService } from './base-seeder.service';
 import { FileTargetType } from '@prisma/client';
-import { STORAGE_UPLOAD_CATEGORIES } from '../../../src/config/configs/storage.config';
-import { SEED_CONSTANTS } from '../constants/seed.constants';
+import { STORAGE_UPLOAD_CATEGORIES } from '../../../../src/config/configs/storage.config';
+import { SEED_CONSTANTS } from '../../constants/seed.constants';
 
 export class CleanupService {
     private baseSeeder: BaseSeederService;
@@ -16,14 +16,15 @@ export class CleanupService {
         console.log('🧹 Starting cleanup of old files...');
 
         await Promise.all([
-            this.cleanupProjectAssets(),
+            this.cleanupDefaultProjectAssets(),
+            this.cleanupDefaultProjectBackgrounds(),
             this.cleanupStorageUploads(),
         ]);
 
         console.log('✅ Cleanup completed!');
     }
 
-    private async cleanupProjectAssets(): Promise<void> {
+    private async cleanupDefaultProjectAssets(): Promise<void> {
         try {
             const defaultAssetsDir = this.baseSeeder.filePathsService.getDirectoryPath(
                 FileTargetType.PROJECT_ASSET,
@@ -34,6 +35,20 @@ export class CleanupService {
             await cleanupDirectoryExcept(defaultAssetsDir, [SEED_CONSTANTS.FILES.DEFAULT_PROJECT_ASSET.FILENAME]);
         } catch (error) {
             console.error('❌ Error cleaning project assets:', error);
+        }
+    }
+
+    private async cleanupDefaultProjectBackgrounds(): Promise<void> {
+        try {
+            const defaultBackgroundsDir = this.baseSeeder.filePathsService.getDirectoryPath(
+                FileTargetType.PROJECT_BACKGROUND,
+                true
+            );
+
+            console.log(`🧹 Cleaning default project backgrounds in: ${defaultBackgroundsDir}`);
+            await cleanupDirectory(defaultBackgroundsDir);
+        } catch (error) {
+            console.error('❌ Error cleaning project backgrounds:', error);
         }
     }
 

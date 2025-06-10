@@ -1,21 +1,21 @@
 // prisma/seeds/services/base-seeder.service.ts
-import { DatabaseService } from '../../../src/core/db/database.service';
-import { FilesService } from '../../../src/core/files/files.service';
-import { FileRepository } from '../../../src/core/files/files.repository';
-import { FilePathsService } from '../../../src/core/files/file-paths.service';
-import { FileUrlTransformerService } from '../../../src/core/files/file-url-transformer.service';
-import { FileUploadService } from '../../../src/core/file-upload/file-upload.service';
-import { UsersService } from '../../../src/core/users/users.service';
-import { UsersRepository } from '../../../src/core/users/users.repository';
-import { HashingPasswordsService } from '../../../src/core/users/hashing-passwords.service';
-import { HashingService } from '../../../src/core/hashing/hashing.service';
-import { ApiConfigService } from '../../../src/config/api-config.service';
+import { DatabaseService } from '../../../../src/core/db/database.service';
+import { FilesService } from '../../../../src/core/files/files.service';
+import { FileRepository } from '../../../../src/core/files/files.repository';
+import { FilePathsService } from '../../../../src/core/files/file-paths.service';
+import { FileUrlTransformerService } from '../../../../src/core/files/file-url-transformer.service';
+import { FileUploadService } from '../../../../src/core/file-upload/file-upload.service';
+import { UsersService } from '../../../../src/core/users/users.service';
+import { UsersRepository } from '../../../../src/core/users/users.repository';
+import { HashingPasswordsService } from '../../../../src/core/users/hashing-passwords.service';
+import { HashingService } from '../../../../src/core/hashing/hashing.service';
+import { ApiConfigService } from '../../../../src/config/api-config.service';
 import { ConfigService } from '@nestjs/config';
-import { UnsplashService } from './unsplash.service';
-import storageConfig from '../../../src/config/configs/storage.config';
-import appConfig from '../../../src/config/configs/app.config';
-import assetsConfig from '../../../src/config/configs/assets.config';
-import unsplashConfig from '../../../src/config/configs/unsplash.config';
+import { UnsplashService } from '../../../../src/core/unsplash/unsplash.service';
+import storageConfig from '../../../../src/config/configs/storage.config';
+import appConfig from '../../../../src/config/configs/app.config';
+import assetsConfig from '../../../../src/config/configs/assets.config';
+import unsplashConfig from '../../../../src/config/configs/unsplash.config';
 
 export class BaseSeederService {
     private static instance: BaseSeederService;

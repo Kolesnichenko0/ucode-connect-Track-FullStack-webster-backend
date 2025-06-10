@@ -3,4 +3,5 @@ export interface FileFieldConfig {
     fileIdField: string;
     fileObjectField?: string;
     urlField: string;
+    fileKeyField?: string;
 }

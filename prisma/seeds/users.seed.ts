@@ -1,5 +1,5 @@
 // prisma/seeds/users.seed.ts
-import { UsersCreationService } from './services/users-creation.service';
+import { UsersCreationService } from './services/modules/users-creation.service';
 
 export class UsersSeed {
     private usersCreationService: UsersCreationService;

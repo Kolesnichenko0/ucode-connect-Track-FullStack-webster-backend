@@ -8,8 +8,6 @@ import {
 import { FileRepository } from './files.repository';
 import { CreateFileDto } from './dto/create-file.dto';
 import { File } from '@prisma/client';
-import { createReadStream } from 'fs';
-import { StreamableFile } from '@nestjs/common';
 import { FilePathsService } from './file-paths.service';
 import { Response as ExpressResponse } from 'express';
 import { UpdateFileDto } from './dto/update-file.dto'
@@ -151,6 +149,8 @@ export class FilesService {
                 case FileTargetType.FONT_ASSET:
                 case FileTargetType.PROJECT_PREVIEW:
                 case FileTargetType.PROJECT_ASSET:
+                case FileTargetType.PROJECT_BACKGROUND:
+                case FileTargetType.PROJECT_ELEMENT:
                 default: {
                     throw new ConflictException(
                         'Cannot delete file. Please use the specific delete method for this target type.',

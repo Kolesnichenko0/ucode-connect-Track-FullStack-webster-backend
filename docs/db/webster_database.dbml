@@ -48,8 +48,8 @@ Table files {
   "author_id" INT
   "is_default" BOOL [not null, default: false]
   "target_id" INT
-  "target_type" ENUM('user_avatar', 'project_asset', 'project_preview', 'font_asset') [not null]
-  "file_key" VARCHAR(36) [not null, unique]
+  "target_type" ENUM('user_avatar', 'project_asset', 'project_preview', 'project_background', 'project_element', 'font_asset') [not null]
+  "file_key" VARCHAR(100) [not null, unique]
   "mime_type" VARCHAR(100) [not null]
   "extension" VARCHAR(10) [not null]
   "created_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]

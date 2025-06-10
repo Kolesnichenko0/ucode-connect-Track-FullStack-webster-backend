@@ -74,7 +74,7 @@ model File {
   isDefault  Boolean        @default(false) @map("is_default")
   targetId   Int?           @map("target_id")
   targetType FileTargetType @map("target_type")
-  fileKey    String         @unique(map: "uq_files_file_key") @map("file_key") @db.VarChar(36)
+  fileKey    String         @unique(map: "uq_files_file_key") @map("file_key") @db.VarChar(100)
   mimeType   String         @map("mime_type") @db.VarChar(100)
   extension  String         @db.VarChar(10)
   createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamp(0)
@@ -126,10 +126,12 @@ model Project {
 // }
 
 enum FileTargetType {
-  USER_AVATAR     @map("user_avatar")
-  PROJECT_ASSET   @map("project_asset")
-  PROJECT_PREVIEW @map("project_preview")
-  FONT_ASSET      @map("font_asset")
+  USER_AVATAR        @map("user_avatar")
+  PROJECT_ASSET      @map("project_asset")
+  PROJECT_PREVIEW    @map("project_preview")
+  FONT_ASSET         @map("font_asset")
+  PROJECT_BACKGROUND @map("project_background")
+  PROJECT_ELEMENT    @map("project_element")
 }
 
 enum ExternalAccountProvider {

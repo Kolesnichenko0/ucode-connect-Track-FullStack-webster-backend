@@ -1,35 +1,35 @@
 // prisma/seeds/index.ts
 import { FilesSeed } from './files.seed';
 import { UsersSeed } from './users.seed';
-import { CleanupService } from './services/cleanup.service';
+import { CleanupService } from './services/core/cleanup.service';
+import { ValidationService } from './services/core/validation.service';
 
 async function runSeeds() {
     try {
         console.log('🌱 Starting seeding process...\n');
-        console.log('=' .repeat(60));
+        console.log('='.repeat(60));
 
-        // 0. Очищаем старые файлы
+        const validationService = new ValidationService();
+        await validationService.checkRequiredFiles();
+
+        console.log('='.repeat(60));
+
         const cleanupService = new CleanupService();
         await cleanupService.cleanupAllFiles();
 
-        console.log('=' .repeat(60));
+        console.log('='.repeat(60));
 
-        // 1. Создаем дефолтные файлы
         const filesSeed = new FilesSeed();
-        const filesResult = await filesSeed.run();
+        await filesSeed.run();
 
-        console.log('📊 Files Summary:');
-        console.log(`   • Default avatar ID: ${filesResult.defaultAvatarId}`);
-        console.log(`   • Project assets created: ${filesResult.projectAssetIds.length}`);
-        console.log('=' .repeat(60));
+        console.log('='.repeat(60));
 
-        // 2. Создаем пользователей
         const usersSeed = new UsersSeed();
         await usersSeed.run();
 
-        console.log('=' .repeat(60));
+        console.log('='.repeat(60));
         console.log('🎉 All seeding completed successfully!');
-        console.log('=' .repeat(60));
+        console.log('='.repeat(60));
     } catch (error) {
         console.error('💥 Seeding failed:', error);
         process.exit(1);

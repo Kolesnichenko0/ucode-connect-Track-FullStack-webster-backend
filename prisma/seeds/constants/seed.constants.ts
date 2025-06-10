@@ -4,43 +4,67 @@ export const SEED_CONSTANTS = {
         DOMAIN: 'gmail.com',
     },
     USERS: {
-        TOTAL: 5,
+        TOTAL: 10,
         PASSWORD: 'Password123!$',
         GENDER_PROBABILITY: 0.5,
+        AVATAR_PROBABILITY: 0.7,
         TEST_USER: {
             FIRST_NAME: 'Test',
             LAST_NAME: 'User',
             EMAIL_PREFIX: 'test.user',
         },
     },
+    USER_AVATAR_SERVICE: {
+        BASE_URL: 'https://avatar.iran.liara.run/public',
+        ENDPOINTS: {
+            BOY: 'boy',
+            GIRL: 'girl',
+        },
+        FORMAT: 'png' as const,
+    },
+    UNSPLASH: {
+        MAX_PER_PAGE: 30,
+        PROJECT_BACKGROUNDS: {
+            COUNT_PER_QUERY: 2, // Number of photos for each query. MAX is 30.
+            WIDTH: 1920,
+            HEIGHT: 1080,
+            ORIENTATION: 'landscape' as const,
+            CONTENT_FILTER: 'high' as const,
+            FORMAT: 'jpg' as const,
+            CATEGORIES: [
+                {
+                    name: 'nature',
+                    queries: ['beautiful landscape', 'nature photography', 'mountains forest'],
+                },
+                {
+                    name: 'architecture',
+                    queries: ['modern architecture', 'building interior', 'minimal design'],
+                },
+                {
+                    name: 'business',
+                    queries: ['modern office', 'workspace design', 'technology'],
+                },
+                {
+                    name: 'abstract',
+                    queries: ['geometric pattern', 'abstract design', 'minimal gradient'],
+                },
+                {
+                    name: 'texture',
+                    queries: ['clean texture', 'material surface', 'background pattern'],
+                },
+            ],
+        },
+    },
     FILES: {
         DEFAULT_USER_AVATAR_ASSET: {
-            FILENAME: 'default-avatar.png',
-        },
-        USER_AVATARS_UPLOADS_UNSPLASH: {
-            SIZE: 400,
-            ORIENTATION: 'squarish' as const,
+            FILENAME: 'default-user-avatar.png',
         },
         DEFAULT_PROJECT_ASSET: {
             FILENAME: 'default-project-asset.jpg',
         },
-        DEFAULT_PROJECT_ASSETS_UNSPLASH: {
-            COUNT: 5,
-            WIDTH: 1920,
-            HEIGHT: 1080,
-            ORIENTATION: 'landscape' as const,
-            CATEGORIES: [
-                { name: 'nature', keywords: ['landscape', 'forest', 'mountains', 'ocean'] },
-                { name: 'architecture', keywords: ['building', 'modern', 'interior', 'minimal'] },
-                { name: 'business', keywords: ['office', 'workspace', 'technology', 'professional'] },
-                { name: 'abstract', keywords: ['geometric', 'pattern', 'gradient', 'minimal'] },
-                { name: 'texture', keywords: ['material', 'surface', 'background', 'clean'] },
-            ],
-        },
         DEFAULT_PROJECT_PREVIEW: {
             FILENAME: 'default-project-preview.jpg',
         },
+        DEFAULT_PROJECT_ELEMENT_MIN_COUNT: 20,
     },
 } as const;
-
-export type ProjectAssetCategory = typeof SEED_CONSTANTS.FILES.DEFAULT_PROJECT_ASSETS_UNSPLASH.CATEGORIES[number];
