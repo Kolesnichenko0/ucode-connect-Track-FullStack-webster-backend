@@ -3,9 +3,9 @@ import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../../core/db/database.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { GetProjectsDto } from './dto/get-projects.dto';
-import { Project } from '@prisma/client';
 import { GetProjectsCursorDto } from './dto/get-projects-cursor.dto';
+import { Project } from '@prisma/client';
+import { GetProjectsDto } from './dto/get-projects.dto';
 
 @Injectable()
 export class ProjectsRepository {
@@ -39,7 +39,7 @@ export class ProjectsRepository {
 
     async findByAuthorId(
         authorId: number,
-        filters: GetProjectsCursorDto,
+        filters: GetProjectsDto,
     ): Promise<{ projects: Project[]; total: number }> {
         const { is_template, title} = filters;
 

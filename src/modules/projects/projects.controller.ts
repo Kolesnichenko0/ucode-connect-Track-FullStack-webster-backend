@@ -38,8 +38,7 @@ import {
 } from '../../core/file-upload/constants/file-upload.contsants';
 import { ParseFilesPipe } from '../../common/pipes/parse-files.pipe';
 import { CanCopyProjectGuard } from './guards/can-copy-project.guard';
-import { GetProjectsCursorDto } from './dto/get-projects-cursor.dto';
-import { GetTemplatesCursorDto } from './dto/get-templates-cursor.dto';
+import { GetTemplatesDto } from './dto/get-templates.dto';
 import { CursorPaginationResult, ProjectCursor } from '../../common/pagination/cursor';
 import { AfterCursorQueryParseInterceptor } from '../../common/interceptors/after-cursor.interceptor';
 
@@ -87,7 +86,7 @@ export class ProjectsController {
         description: 'Unauthorized access',
     })
     async findAllTemplates(
-        @Query() query: GetTemplatesCursorDto,
+        @Query() query: GetTemplatesDto,
     ): Promise<CursorPaginationResult<Project, ProjectCursor>> {
         console.log(query);
         return this.projectsService.findAllTemplates(query);

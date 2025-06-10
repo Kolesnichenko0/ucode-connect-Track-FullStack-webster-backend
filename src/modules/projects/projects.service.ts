@@ -9,7 +9,7 @@ import { plainToInstance } from 'class-transformer';
 import { ProjectsRepository } from './projects.repository';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { GetProjectsDto } from './dto/get-projects.dto'; //TODO: где должжна быть эта ДТОшка
+import { GetProjectsCursorDto } from './dto/get-projects-cursor.dto'; //TODO: где должжна быть эта ДТОшка
 import { ResponseProjectFilesDto } from './dto/response-project-files.dto';
 import { CopyProjectResponseDto } from './dto/copy-project-response.dto';
 import { SERIALIZATION_GROUPS, Project } from './entities/project.entity';
@@ -21,10 +21,10 @@ import { File as PrismaFile, FileTargetType } from '@prisma/client';
 import * as fsPromises from 'fs/promises';
 import { isUUID } from 'class-validator';
 import { convertBase64ToFile, isBase64Image } from '../../common/utils';
-import { GetProjectsCursorDto } from './dto/get-projects-cursor.dto';
+import { GetProjectsDto } from './dto/get-projects.dto';
 import { ProjectsPaginationRepository } from './projects-pagination.repository';
 import { CursorPaginationResult, ProjectCursor } from '../../common/pagination/cursor';
-import { GetTemplatesCursorDto } from './dto/get-templates-cursor.dto';
+import { GetTemplatesDto } from './dto/get-templates.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -61,7 +61,7 @@ export class ProjectsService {
         return this.resolveFileKeysToUrls(project);
     }
 
-    async findAllTemplates(filters: GetTemplatesCursorDto): Promise<CursorPaginationResult<Project, ProjectCursor>> {
+    async findAllTemplates(filters: GetTemplatesDto): Promise<CursorPaginationResult<Project, ProjectCursor>> {
         const result =
             await this.projectsPaginationRepository.findAllTemplatesWithCursor(filters);
 

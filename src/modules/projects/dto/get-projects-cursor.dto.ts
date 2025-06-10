@@ -5,7 +5,7 @@ import { CursorPaginationDto, CursorType, ProjectCursor } from '../../../common/
 import { IsOptional, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class GetProjectsDto extends CursorPaginationDto<ProjectCursor>{
+export class GetProjectsCursorDto extends CursorPaginationDto<ProjectCursor>{
     @ApiProperty({
         description: 'Cursor for pagination. Object with `id` and `updatedAt` of the last project.',
         required: false,
@@ -19,6 +19,4 @@ export class GetProjectsDto extends CursorPaginationDto<ProjectCursor>{
     @ApiProperty({ description: 'Search by project title', required: false })
     @IsName(true, false)
     title?: string;
-
-    type: CursorType = CursorType.PROJECT;
 }
