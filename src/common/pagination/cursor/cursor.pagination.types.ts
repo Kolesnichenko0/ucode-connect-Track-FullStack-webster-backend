@@ -6,13 +6,13 @@ export class BaseCursor {
     id: number;
 }
 
-export class EventCursor extends BaseCursor {
+export class ProjectCursor extends BaseCursor {
     @IsISO8601Date(false, true)
-    createdAt: string;
+    updatedAt: string;
 }
 
 export enum CursorType {
-    EVENT = 'event',
+    PROJECT = 'project',
 }
 
 export interface CursorPaginationResult<T, C> {
@@ -25,7 +25,7 @@ export interface CursorPaginationResult<T, C> {
 
 export interface CursorConfig<T, C extends BaseCursor> {
     cursorFields: (keyof C)[];
-    entityAliases: Record<keyof C, string>;
+    entityAliases?: Record<keyof C, string>;
     sortDirections?: Record<keyof C, "ASC" | "DESC">;
 
     getFieldValue?: (item: T, field: keyof C) => any;

@@ -38,10 +38,12 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadFileTypeValidator, UploadFileSizeValidator } from '../file-upload/validators';
 import { UPLOAD_ALLOWED_FILE_MIME_TYPES, UPLOAD_ALLOWED_FILE_EXTENSIONS, UPLOAD_ALLOWED_MAX_FILE_SIZES } from '../file-upload/constants/file-upload.contsants';
 import { ProjectsService } from '../../modules/projects/projects.service';
-import { GetProjectsDto } from '../../modules/projects/dto/get-projects.dto';
+import { GetProjectsCursorDto } from '../../modules/projects/dto/get-projects-cursor.dto';
 import { Project, ProjectWithBasic } from '../../modules/projects/entities/project.entity';
 
 import { FileOwnerGuard } from '../files/guards/file-owner.guard';
+import { CursorPaginationResult, ProjectCursor } from '../../common/pagination/cursor';
+import { AfterCursorQueryParseInterceptor } from '../../common/interceptors/after-cursor.interceptor';
 
 @Controller('users')
 @ApiTags('Users')
@@ -434,6 +436,7 @@ export class UsersController {
 
     @Get(':id/projects')
     @UseGuards(AccountOwnerGuard)
+    @UseInterceptors(AfterCursorQueryParseInterceptor)
     @ApiOperation({ summary: 'Get user projects' })
     @ApiParam({
         name: 'id',
@@ -479,14 +482,11 @@ export class UsersController {
     })
     async getUserProjects(
         @Param('id') id: number,
-        @Query() getProjectsDto: GetProjectsDto,
-    ): Promise<{
-        projects: ProjectWithBasic[];
-        total: number;
-    }> {
+        @Query() query: GetProjectsCursorDto
+    ): Promise<CursorPaginationResult<Project, ProjectCursor>> {
         await this.usersService.findById(id);
 
-        return this.projectsService.findByAuthorId(id, getProjectsDto);
+        return this.projectsService.findByAuthorId(id, query);
     }
 
     @Delete(':id/avatar/:fileKey')

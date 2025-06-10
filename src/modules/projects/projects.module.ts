@@ -7,6 +7,7 @@ import { FilesModule } from '../../core/files/files.module';
 import { FileUploadModule } from '../../core/file-upload/file-upload.module';
 import { DatabaseModule } from '../../core/db/database.module';
 import { UsersModule } from 'src/core/users/users.module';
+import { ProjectsPaginationRepository } from './projects-pagination.repository';
 
 @Module({
     imports: [
@@ -18,6 +19,7 @@ import { UsersModule } from 'src/core/users/users.module';
     providers: [
         ProjectsService,
         ProjectsRepository,
+        ProjectsPaginationRepository
     ],
     exports: [ProjectsService],
 })

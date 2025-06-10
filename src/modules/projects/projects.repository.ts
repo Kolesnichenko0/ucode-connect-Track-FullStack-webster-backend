@@ -3,8 +3,9 @@ import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../../core/db/database.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { GetProjectsDto } from './dto/get-projects.dto';
+import { GetProjectsCursorDto } from './dto/get-projects-cursor.dto';
 import { Project } from '@prisma/client';
+import { GetProjectsDto } from './dto/get-projects.dto';
 
 @Injectable()
 export class ProjectsRepository {
