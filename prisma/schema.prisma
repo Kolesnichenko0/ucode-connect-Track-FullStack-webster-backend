@@ -95,6 +95,7 @@ model Project {
   previewFileId Int      @map("preview_file_id")
   isTemplate    Boolean  @default(false) @map("is_template")
   title         String   @db.VarChar(100)
+  type          String   @db.VarChar(50)
   description   String?  @db.Text
   content       Json
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp(0)

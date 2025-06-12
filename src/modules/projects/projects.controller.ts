@@ -288,7 +288,6 @@ export class ProjectsController {
     }
 
     @Post(':id/copy')
-    @UseGuards(ProjectOwnerGuard)
     @UseGuards(CanCopyProjectGuard)
     @ApiOperation({ summary: 'Copy project' })
     @ApiParam({

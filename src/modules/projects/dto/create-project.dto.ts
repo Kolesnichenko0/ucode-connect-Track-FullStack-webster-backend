@@ -8,12 +8,16 @@ export class CreateProjectDto {
     @IsName(false)
     title: string;
 
+    @ApiProperty({ description: 'Project type', example: 'instagram' })
+    @IsName(false, false, 1, 50)
+    type: string;
+
     @ApiProperty({
         description: 'Project description',
         example: 'A beautiful design project',
         required: false
     })
-    @IsDescription(false)
+    @IsDescription(true, true)
     description?: string | null;
 
     @ApiProperty({ description: 'Project JSON content with canvas data' })

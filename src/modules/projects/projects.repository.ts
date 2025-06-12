@@ -4,7 +4,7 @@ import { DatabaseService } from '../../core/db/database.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { GetProjectsCursorDto } from './dto/get-projects-cursor.dto';
-import { Project } from '@prisma/client';
+import { Project } from './entities/project.entity';
 import { GetProjectsDto } from './dto/get-projects.dto';
 
 @Injectable()

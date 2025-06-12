@@ -208,13 +208,14 @@ export class ProjectsService {
     async copy(id: number, authorId: number): Promise<CopyProjectResponseDto> {
         const originalProject = await this.findByIdWithFullInformation(id, false);
 
-        const { newPreviewFileId } = await this.duplicatePreviewFile(
+        const duplicateResult = await this.duplicatePreviewFile(
             originalProject.previewFileId,
             authorId,
         );
 
         const newProjectData: CreateProjectDto = {
             title: `${originalProject.title} (Copy)`,
+            type: originalProject.type,
             description: originalProject.description,
             content: originalProject.content,
             isTemplate: false,
@@ -222,7 +223,7 @@ export class ProjectsService {
 
         const copiedProject = await this.projectsRepository.create({
             ...newProjectData,
-            previewFileId: newPreviewFileId,
+            previewFileId: duplicateResult.fileId,
             authorId,
         });
 
@@ -237,7 +238,7 @@ export class ProjectsService {
             { content: copiedContent }
         );
 
-        await this.filesService.updateFile(newPreviewFileId, {targetId: copiedProject.id});
+        await this.filesService.updateFile(duplicateResult.fileId, {targetId: copiedProject.id});
 
         return {
             projectId: copiedProject.id,
@@ -311,6 +312,7 @@ export class ProjectsService {
         projectId?: number,
     ): Promise<{ previewFileId: number; processedContent: object }> {
         let processedContent = { ...content };
+        let previewFileKey: string;
         let previewFileId: number;
 
         if (content.thumbnailUrl && isBase64Image(content.thumbnailUrl)) {
@@ -330,19 +332,32 @@ export class ProjectsService {
                 previewMetadata,
             );
 
-            previewFileId = uploadResult.fileId;
-            processedContent.thumbnailFileId = previewFileId;
+            previewFileKey = uploadResult.fileKey;
+            previewFileId = uploadResult.fileId
+            processedContent.thumbnailFileKey = previewFileKey;
 
             delete processedContent.thumbnailUrl;
-        } else if (content.thumbnailFileId) {
-            const { newPreviewFileId } = await this.duplicatePreviewFile(
-                content.thumbnailFileId,
+        } else if (content.previewFileKey) {
+            const previewFile: PrismaFile = await this.filesService.findByFileKey(content.previewFileKey)
+
+            const duplicateResult = await this.duplicatePreviewFile(
+                previewFile.id,
                 authorId!,
                 projectId!,
             );
-            previewFileId = newPreviewFileId;
+
+
+            previewFileId = duplicateResult.fileId
+            previewFileKey = duplicateResult.fileKey;
+            processedContent.thumbnailFileKey = previewFileKey;
+        } else if (!content.previewFileKey) {
+            const defaultPreview = await this.filesService.findAllDefaultsByTargetType(FileTargetType.PROJECT_PREVIEW);
+
+            previewFileKey = defaultPreview[0].fileKey;
+            previewFileId = defaultPreview[0].id
+            processedContent.thumbnailFileKey = previewFileKey;
         } else {
-            throw new BadRequestException('Project thumbnail is required');
+            throw new BadRequestException("Bad content structure")
         }
 
         return { previewFileId, processedContent };
@@ -368,7 +383,7 @@ export class ProjectsService {
                             );
 
                         if (!originalFile.isDefault) {
-                            const duplicateFileResult: number =
+                            const duplicateFileResult =
                                 await this.duplicateFile(
                                     originalFile,
                                     originalFile.targetType,
@@ -378,7 +393,7 @@ export class ProjectsService {
 
                             const duplicatedFile: PrismaFile =
                                 await this.filesService.findById(
-                                    duplicateFileResult,
+                                    duplicateFileResult.fileId,
                                 );
 
                             return {
@@ -399,13 +414,12 @@ export class ProjectsService {
         originalPreviewFileId: number,
         newAuthorId: number,
         newProjectId?: number,
-    ): Promise<{ newPreviewFileId: number }> {
+    ): Promise<{ fileId: number, url: string, fileKey: string}> {
         const originalPreviewFile: PrismaFile =
             await this.filesService.findById(originalPreviewFileId);
-        let newPreviewFileId: number = originalPreviewFileId;
 
         if (!originalPreviewFile.isDefault) {
-            newPreviewFileId = await this.duplicateFile(
+            return  await this.duplicateFile(
                 originalPreviewFile,
                 originalPreviewFile.targetType,
                 newAuthorId,
@@ -413,7 +427,7 @@ export class ProjectsService {
             );
         }
 
-        return { newPreviewFileId };
+        return { fileId: originalPreviewFile.id, url: this.filePathsService.getFileUrl(originalPreviewFile), fileKey: originalPreviewFile.fileKey};
     }
 
     private async resolveFileKeysToUrls(project: Project): Promise<any> {
@@ -426,7 +440,6 @@ export class ProjectsService {
         const resolvedObjects = await Promise.all(
             enrichedProject.content.renderableObjects.map(async (obj: any) => {
                 if (obj.imageSource) {
-                    //TODO: Разобраться с renderableObjects, ее структурой, как именно мы должны обрабатывать imageSource, есть ли у него какие-то поля
                     const file = await this.filesService.findByFileKey(
                         obj.imageSource,
                     );
@@ -471,14 +484,13 @@ export class ProjectsService {
         newTargetType: FileTargetType,
         newAuthorId: number,
         newTargetId?: number,
-    ): Promise<number> {
+    ): Promise<{ fileId: number, url: string, fileKey: string}> {
         const filePath = this.filePathsService.getFilePath(originalDbFile);
         const fileBuffer = await fsPromises.readFile(filePath);
 
         const newOriginalName = `${originalDbFile.fileKey}_copy.${originalDbFile.extension}`;
 
         const multerFileToUpload: Express.Multer.File = {
-            //TODO: Переместить в utils
             buffer: fileBuffer,
             originalname: newOriginalName,
             mimetype: originalDbFile.mimeType,
@@ -499,7 +511,7 @@ export class ProjectsService {
             );
         }
 
-        return uploadResult.fileId;
+        return uploadResult;
     }
 
     private async getDefaultPreviewId(): Promise<number> {

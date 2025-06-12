@@ -18,6 +18,10 @@ export class Project implements PrismaProject {
     @Expose({ groups: ['basic'] })
     title: string;
 
+    @ApiProperty({ description: 'Project type', example: 'instagram' })
+    @Expose({ groups: ['basic'] })
+    type: string
+
     @ApiProperty({
         description: 'Project description',
         example: 'A beautiful design project',
