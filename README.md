@@ -93,11 +93,11 @@ The [Swagger](https://swagger.io/) library is used.
 
 1. To create new migration run command:
     ```bash
-    npm run migrate:create --name <migration_name>
+    npm run migrate:create:dev --name <migration_name>
     ```
 2. To refresh all data at the database run command:
     ```bash
-    npm run migrate:refresh:dev
+    npm run migrate:reset:dev
     ```
 
 ## 🪲 Testing

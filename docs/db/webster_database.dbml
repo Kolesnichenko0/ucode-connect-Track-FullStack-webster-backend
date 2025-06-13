@@ -96,8 +96,8 @@ Table fonts {
 }
 
 Ref: "users"."id" < "refresh_token_nonces"."user_id" [delete: cascade]
-Ref: "users"."id" < "projects"."author_id" [delete: cascade]
-Ref: "users"."id" < "fonts"."user_id" [delete: cascade]
+Ref: "users"."id" < "projects"."author_id" [delete: restrict]
+Ref: "users"."id" < "fonts"."user_id" [delete: restrict]
 Ref: "users"."id" < "files"."author_id" [delete: set null]
 Ref: "users"."id" < "external_accounts"."user_id" [delete: cascade]
 

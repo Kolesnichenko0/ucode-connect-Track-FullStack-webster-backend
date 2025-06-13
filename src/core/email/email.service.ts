@@ -6,7 +6,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { EmailTemplateInterface } from './templates/email-template.interface';
 import emailTemplates from './templates/email.templates';
-import { GoogleAuth } from 'google-auth-library';
 
 
 @Injectable()
