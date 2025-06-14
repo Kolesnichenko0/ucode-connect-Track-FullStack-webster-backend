@@ -40,16 +40,16 @@ async function bootstrap() {
     const logoFilename = cs.get('assets.filenames.logo');
     const fullLogoPath = path.join(projectPath, logoFilename);
 
-    app.useGlobalFilters(new CsrfExceptionFilter());
-    app.setGlobalPrefix(globalPrefix);
-    app.useStaticAssets(publicAssetsPath);
-
     app.enableCors({
         origin: frontendOrigin,
         methods: corsConfig.methods,
         allowedHeaders: corsConfig.allowedHeaders,
         credentials: corsConfig.credentials, // Required to send cookies cross-origin
     });
+
+    app.useGlobalFilters(new CsrfExceptionFilter());
+    app.setGlobalPrefix(globalPrefix);
+    app.useStaticAssets(publicAssetsPath);
 
     app.use(
         csurf({
