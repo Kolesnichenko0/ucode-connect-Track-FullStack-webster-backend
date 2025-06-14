@@ -298,7 +298,6 @@ export class ProjectsController {
         @Body() importDto: ImportUnsplashDto,
         @UserId() userId: number,
     ): Promise<AddUnsplashPhotoResponseDto>{
-        console.log("importDto ", importDto)
         return this.projectsService.addUnsplashPhotoToProject(id, importDto, userId)
     }
 

@@ -1,6 +1,4 @@
-// src/core/projects/dto/copy-project-response.dto.ts
-import { ApiProperty } from '@nestjs/swagger';
-
+// src/core/projects/dto/add-unsplash-project.dto.ts
 export class AddUnsplashPhotoResponseDto {
     fileId: number;
 

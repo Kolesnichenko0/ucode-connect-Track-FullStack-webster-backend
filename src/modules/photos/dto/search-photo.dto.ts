@@ -1,6 +1,6 @@
+// src/modules/photos/dto/search-photo.dto.ts
 import { UnsplashOrientation, UnsplashSearchOptions } from '../../../core/unsplash/interfaces/unsplash.interfaces';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
 import { IsEnumValue, IsName } from '../../../common/validators';
 
 export class SearchPhotoDto implements UnsplashSearchOptions{

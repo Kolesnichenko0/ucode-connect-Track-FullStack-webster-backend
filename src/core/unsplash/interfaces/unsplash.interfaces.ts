@@ -26,7 +26,7 @@ export interface UnsplashSearchOptions {
     query: string;
     page?: number;
     perPage?: number;
-    orientation?: 'landscape' | 'portrait' | 'squarish';
+    orientation?: UnsplashOrientation;
     collections?: string[];
     contentFilter?: 'low' | 'high';
     color?: string;

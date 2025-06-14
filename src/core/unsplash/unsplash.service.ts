@@ -1,5 +1,5 @@
 // src/core/unsplash/services/unsplash.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { createApi } from 'unsplash-js';
 import { ApiResponse } from 'unsplash-js/dist/helpers/response';
 import { Random, Basic } from 'unsplash-js/dist/methods/photos/types';
@@ -13,8 +13,7 @@ import {
     UnsplashImageOptions,
     UnsplashPhotoDownloadInfo,
 } from './interfaces/unsplash.interfaces';
-import { downloadFileFromUrl, getFileExtension } from '../../common/utils';
-import * as mime from 'mime-types';
+import { downloadFileFromUrl } from '../../common/utils';
 
 @Injectable()
 export class UnsplashService {
@@ -365,35 +364,4 @@ export class UnsplashService {
             alt_description: photo.alt_description,
         };
     };
-
-    /**
-     * Downloads a photo from Unsplash by its ID and prepares it as an Express.Multer.File object.
-     * This method handles the required download tracking.
-     * @param photoId The ID of the photo on Unsplash.
-     * @returns A Promise resolving to an Express.Multer.File object.
-     */
-    async downloadAndPrepareFile(photoId: string): Promise<Express.Multer.File> {
-        const photoInfo = await this.findPhotoById(photoId);
-        if (!photoInfo) {
-            throw new NotFoundException(`Photo with ID ${photoId} not found on Unsplash.`);
-        }
-
-        const imageBuffer = await this.downloadPhoto({
-            download_location: photoInfo.links.download_location,
-            id: photoId, // Передаємо ID як запасний варіант
-        }) as Buffer;
-
-        // 3. Визначаємо MIME-тип та розширення
-        const mimeType = 'image/jpeg'; // Unsplash зазвичай повертає JPEG
-        const extension = mime.extension(mimeType) || 'jpg';
-
-
-        // 4. Створюємо об'єкт, сумісний з Express.Multer.File
-        return {
-            buffer: imageBuffer,
-            mimetype: mimeType,
-            originalname: `${photoId}.${extension}`,
-            size: imageBuffer.length,
-        } as Express.Multer.File;
-    }
 }

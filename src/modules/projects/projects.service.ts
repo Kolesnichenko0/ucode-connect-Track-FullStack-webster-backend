@@ -3,7 +3,7 @@ import {
     BadRequestException,
     ImATeapotException,
     Injectable,
-    NotFoundException,
+    NotFoundException, UnprocessableEntityException,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { ProjectsRepository } from './projects.repository';
@@ -30,6 +30,9 @@ import { GetTemplatesDto } from './dto/get-templates.dto';
 import { UnsplashService } from '../../core/unsplash/unsplash.service';
 import { ImportUnsplashDto } from './dto/import-unsplash-image.dto';
 import { AddUnsplashPhotoResponseDto } from './dto/add-unsplash-photo-response.dto';
+import { fromBuffer } from 'file-type';
+import { UPLOAD_ALLOWED_FILE_MIME_TYPES } from '../../core/file-upload/constants/file-upload.contsants';
+import * as mime from 'mime-types';
 
 @Injectable()
 export class ProjectsService {
@@ -593,14 +596,44 @@ export class ProjectsService {
     }
 
     async addUnsplashPhotoToProject(projectId: number, importUnsplashDto: ImportUnsplashDto, authorId: number): Promise<AddUnsplashPhotoResponseDto> {
-        await this.projectsRepository.findByIdAndAuthor(projectId, authorId);
+        await this.findByIdAndAuthor(projectId, authorId);
 
-        const unsplashFile: Express.Multer.File = await this.unsplashService.downloadAndPrepareFile(importUnsplashDto.photoId);
+        const unsplashFile: Express.Multer.File = await this.downloadAndPrepareUnsplashFile(importUnsplashDto.downloadLocation);
 
         return await this.fileUploadService.upload(unsplashFile, {
             targetType: this.PROJECT_ASSET_TARGET_TYPE,
             targetId: projectId,
             authorId: authorId,
         })
+    }
+
+    async downloadAndPrepareUnsplashFile(downloadLocation: string): Promise<Express.Multer.File> {
+        const allowedMimeTypes: string[] = [
+            ...UPLOAD_ALLOWED_FILE_MIME_TYPES.PROJECT_ASSET,
+        ];
+
+        const imageBuffer = await this.unsplashService.downloadPhoto({
+            download_location: downloadLocation,
+        }) as Buffer;
+
+        const imageBufferResponse =
+            await fromBuffer(imageBuffer);
+
+        if (!imageBufferResponse){
+            throw new UnprocessableEntityException(`Unable to determine mime type for photo ${downloadLocation}`)
+        }
+
+        if (!allowedMimeTypes.includes(imageBufferResponse.mime)){
+            throw new UnprocessableEntityException(`Invalid mime type for photo ${downloadLocation}: ${imageBufferResponse.mime}`)
+        }
+
+        const extension = mime.extension(imageBufferResponse.mime);
+
+        return {
+            buffer: imageBuffer,
+            mimetype: imageBufferResponse.mime,
+            originalname: `${downloadLocation}.${extension}`,
+            size: imageBuffer.length,
+        } as Express.Multer.File;
     }
 }
