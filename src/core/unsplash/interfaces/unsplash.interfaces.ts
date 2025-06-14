@@ -32,9 +32,15 @@ export interface UnsplashSearchOptions {
     color?: string;
 }
 
+export enum UnsplashOrientation {
+    LANDSCAPE = 'landscape',
+    PORTRAIT = 'portrait',
+    SQUARISH = 'squarish',
+}
+
 export interface UnsplashRandomPhotoOptions {
     query?: string;
-    orientation?: 'landscape' | 'portrait' | 'squarish';
+    orientation?: UnsplashOrientation;
     count?: number;
     collections?: string[];
     contentFilter?: 'low' | 'high';

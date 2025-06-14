@@ -8,12 +8,14 @@ import { FileUploadModule } from '../../core/file-upload/file-upload.module';
 import { DatabaseModule } from '../../core/db/database.module';
 import { UsersModule } from 'src/core/users/users.module';
 import { ProjectsPaginationRepository } from './projects-pagination.repository';
+import { PhotosModule } from '../photos/photos.module';
 
 @Module({
     imports: [
         DatabaseModule,
         FilesModule,
         FileUploadModule,
+        PhotosModule
     ],
     controllers: [ProjectsController],
     providers: [
