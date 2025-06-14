@@ -68,6 +68,7 @@ Table projects {
   "preview_file_id" INT [not null, unique]
   "is_template" BOOL [not null, default: false]
   "title" VARCHAR(100) [not null]
+  "type" VARCHAR(50) [not null]
   "description" TEXT
   "content" JSON [not null]
   "created_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
@@ -96,8 +97,8 @@ Table fonts {
 }
 
 Ref: "users"."id" < "refresh_token_nonces"."user_id" [delete: cascade]
-Ref: "users"."id" < "projects"."author_id" [delete: restrict]
-Ref: "users"."id" < "fonts"."user_id" [delete: restrict]
+Ref: "users"."id" < "projects"."author_id" [delete: cascade]
+Ref: "users"."id" < "fonts"."user_id" [delete: cascade]
 Ref: "users"."id" < "files"."author_id" [delete: set null]
 Ref: "users"."id" < "external_accounts"."user_id" [delete: cascade]
 

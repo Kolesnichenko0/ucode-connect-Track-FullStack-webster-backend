@@ -10,13 +10,14 @@ export class FileTargetTypeMapper {
         [FileTargetType.FONT_ASSET]: 'font-assets',
     };
 
-    // Inverted mapping
-    private static readonly CATEGORY_MAPPINGS: Record<string, FileTargetType> =
-        Object.entries(FileTargetTypeMapper.TYPE_MAPPINGS)
-            .reduce((acc, [type, category]) => {
-                acc[category] = Number(type) as unknown as FileTargetType;
-                return acc;
-            }, {} as Record<string, FileTargetType>);
+    private static readonly CATEGORY_MAPPINGS: Record<string, FileTargetType> = {
+        'user-avatars': FileTargetType.USER_AVATAR,
+        'project-assets': FileTargetType.PROJECT_ASSET,
+        'project-previews': FileTargetType.PROJECT_PREVIEW,
+        'project-backgrounds': FileTargetType.PROJECT_BACKGROUND,
+        'project-elements': FileTargetType.PROJECT_ELEMENT,
+        'font-assets': FileTargetType.FONT_ASSET,
+    };
 
     static getCategory(targetType: FileTargetType): string | undefined {
         return FileTargetTypeMapper.TYPE_MAPPINGS[targetType];
