@@ -1,4 +1,4 @@
-// src/jobs/jobs.module.ts
+// src/core/jobs/jobs.module.ts
 import { Module } from '@nestjs/common';
 import { UnactivatedUsersCleanupSchedulerService } from './unactivated-users-cleanup-scheduler.service';
 import { RefreshTokenNoncesCleanupSchedulerService } from './refresh-token-nonces-cleanup-scheduler.service';

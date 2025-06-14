@@ -1,4 +1,4 @@
-// src/core/auth/guards/auth.jwt-guards.ts
+// src/core/auth/guards/auth.guards.ts
 import { AuthGuard } from '@nestjs/passport';
 import { createJwtGuard } from '../../jwt/factories/jwt-guard.factory';
 import { RefreshTokenNoncesService } from '../../refresh-token-nonces/refresh-token-nonces.service';
@@ -10,7 +10,7 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from '../../../common/decorators/public.decorator';
+import { IS_PUBLIC_KEY } from '../../../common/decorators/';
 import { UsersService } from '../../users/users.service';
 
 export const JwtConfirmEmailGuard = createJwtGuard('jwt-confirm-email');
