@@ -1,4 +1,6 @@
 // prisma/seeds/constants/seed.constants.ts
+import { UnsplashOrientation } from '../../../src/core/unsplash/interfaces/unsplash.interfaces';
+
 export const SEED_CONSTANTS = {
     PRODUCT: {
         DOMAIN: 'gmail.com',
@@ -28,7 +30,7 @@ export const SEED_CONSTANTS = {
             COUNT_PER_QUERY: 2, // Number of photos for each query. MAX is 30.
             WIDTH: 1920,
             HEIGHT: 1080,
-            ORIENTATION: 'landscape' as const,
+            ORIENTATION: UnsplashOrientation.LANDSCAPE as const,
             CONTENT_FILTER: 'high' as const,
             FORMAT: 'jpg' as const,
             CATEGORIES: [

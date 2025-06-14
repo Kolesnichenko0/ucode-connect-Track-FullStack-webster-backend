@@ -1,9 +1,9 @@
 // src/core/projects/projects.service.ts
 import {
-    Injectable,
-    NotFoundException,
     BadRequestException,
     ImATeapotException,
+    Injectable,
+    NotFoundException, UnprocessableEntityException,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { ProjectsRepository } from './projects.repository';
@@ -12,7 +12,7 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { GetProjectsCursorDto } from './dto/get-projects-cursor.dto'; //TODO: где должжна быть эта ДТОшка
 import { ProjectFilesResponseDto } from './dto/project-files-response.dto';
 import { CopyProjectResponseDto } from './dto/copy-project-response.dto';
-import { SERIALIZATION_GROUPS, Project } from './entities/project.entity';
+import { Project, SERIALIZATION_GROUPS } from './entities/project.entity';
 import { FilesService } from '../../core/files/files.service';
 import { FileUploadService } from '../../core/file-upload/file-upload.service';
 import { FilePathsService } from '../../core/files/file-paths.service';
@@ -21,10 +21,18 @@ import { File as PrismaFile, FileTargetType } from '@prisma/client';
 import * as fsPromises from 'fs/promises';
 import { isUUID } from 'class-validator';
 import { convertBase64ToFile, isBase64Image } from '../../common/utils';
-import { GetProjectsDto } from './dto/get-projects.dto';
 import { ProjectsPaginationRepository } from './projects-pagination.repository';
-import { CursorPaginationResult, ProjectCursor } from '../../common/pagination/cursor';
+import {
+    CursorPaginationResult,
+    ProjectCursor,
+} from '../../common/pagination/cursor';
 import { GetTemplatesDto } from './dto/get-templates.dto';
+import { UnsplashService } from '../../core/unsplash/unsplash.service';
+import { ImportUnsplashDto } from './dto/import-unsplash-image.dto';
+import { AddUnsplashPhotoResponseDto } from './dto/add-unsplash-photo-response.dto';
+import { fromBuffer } from 'file-type';
+import { UPLOAD_ALLOWED_FILE_MIME_TYPES } from '../../core/file-upload/constants/file-upload.contsants';
+import * as mime from 'mime-types';
 
 @Injectable()
 export class ProjectsService {
@@ -38,7 +46,8 @@ export class ProjectsService {
         private readonly filesService: FilesService,
         private readonly fileUploadService: FileUploadService,
         private readonly filePathsService: FilePathsService,
-        private readonly projectsPaginationRepository: ProjectsPaginationRepository
+        private readonly projectsPaginationRepository: ProjectsPaginationRepository,
+        private readonly unsplashService: UnsplashService,
     ) {}
 
     async create(dto: CreateProjectDto, authorId?: number): Promise<Project> {
@@ -584,5 +593,47 @@ export class ProjectsService {
         }
 
         return this.resolveFileKeysToUrls(updatedProject);
+    }
+
+    async addUnsplashPhotoToProject(projectId: number, importUnsplashDto: ImportUnsplashDto, authorId: number): Promise<AddUnsplashPhotoResponseDto> {
+        await this.findByIdAndAuthor(projectId, authorId);
+
+        const unsplashFile: Express.Multer.File = await this.downloadAndPrepareUnsplashFile(importUnsplashDto.downloadLocation);
+
+        return await this.fileUploadService.upload(unsplashFile, {
+            targetType: this.PROJECT_ASSET_TARGET_TYPE,
+            targetId: projectId,
+            authorId: authorId,
+        })
+    }
+
+    async downloadAndPrepareUnsplashFile(downloadLocation: string): Promise<Express.Multer.File> {
+        const allowedMimeTypes: string[] = [
+            ...UPLOAD_ALLOWED_FILE_MIME_TYPES.PROJECT_ASSET,
+        ];
+
+        const imageBuffer = await this.unsplashService.downloadPhoto({
+            download_location: downloadLocation,
+        }) as Buffer;
+
+        const imageBufferResponse =
+            await fromBuffer(imageBuffer);
+
+        if (!imageBufferResponse){
+            throw new UnprocessableEntityException(`Unable to determine mime type for photo ${downloadLocation}`)
+        }
+
+        if (!allowedMimeTypes.includes(imageBufferResponse.mime)){
+            throw new UnprocessableEntityException(`Invalid mime type for photo ${downloadLocation}: ${imageBufferResponse.mime}`)
+        }
+
+        const extension = mime.extension(imageBufferResponse.mime);
+
+        return {
+            buffer: imageBuffer,
+            mimetype: imageBufferResponse.mime,
+            originalname: `${downloadLocation}.${extension}`,
+            size: imageBuffer.length,
+        } as Express.Multer.File;
     }
 }

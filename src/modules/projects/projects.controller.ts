@@ -41,6 +41,8 @@ import { CanCopyProjectGuard } from './guards/can-copy-project.guard';
 import { GetTemplatesDto } from './dto/get-templates.dto';
 import { CursorPaginationResult, ProjectCursor } from '../../common/pagination/cursor';
 import { AfterCursorQueryParseInterceptor } from '../../common/interceptors/after-cursor.interceptor';
+import { ImportUnsplashDto } from './dto/import-unsplash-image.dto';
+import { AddUnsplashPhotoResponseDto } from './dto/add-unsplash-photo-response.dto';
 
 @Controller('projects')
 @ApiTags('Projects')
@@ -287,6 +289,18 @@ export class ProjectsController {
         return this.projectsService.addFilesToProject(id, files, userId);
     }
 
+    @Post(':id/files/unsplash')
+    @UseGuards(ProjectOwnerGuard)
+    @ApiOperation({ summary: 'Import a photo from Unsplash and add it to the project' })
+    @ApiResponse({ status: 201, description: 'Returns details of the newly created file', type: AddUnsplashPhotoResponseDto })
+    async addUnsplashPhotoToProject(
+        @Param('id') id: number,
+        @Body() importDto: ImportUnsplashDto,
+        @UserId() userId: number,
+    ): Promise<AddUnsplashPhotoResponseDto>{
+        return this.projectsService.addUnsplashPhotoToProject(id, importDto, userId)
+    }
+
     @Post(':id/copy')
     @UseGuards(CanCopyProjectGuard)
     @ApiOperation({ summary: 'Copy project' })
@@ -364,4 +378,6 @@ export class ProjectsController {
             userId,
         );
     }
+
+
 }
