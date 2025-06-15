@@ -1,12 +1,16 @@
-import { Controller, Get, HttpStatus, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query, Res } from '@nestjs/common';
 import { UnsplashService } from '../../core/unsplash/unsplash.service';
 import { SearchPhotoDto } from './dto/search-photo.dto';
 import { UnsplashPhotoResponse, UnsplashRateLimitInfo } from '../../core/unsplash/interfaces/unsplash.interfaces';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { GenerateImageDto } from './dto/generate-image.dto';
+import { PollinationsService } from './pollinations.service';
+import { Response as ExpressResponse } from 'express';
 
 @Controller('photos')
 export class PhotosController {
-    constructor(private readonly unsplashService: UnsplashService) {}
+    constructor(private readonly unsplashService: UnsplashService,
+                private readonly pollinationsService: PollinationsService) {}
 
     @Get('unsplash/search')
     @ApiOperation({
@@ -69,5 +73,22 @@ export class PhotosController {
     async searchUnsplashAvailableStatus(
     ): Promise<UnsplashRateLimitInfo | null> {
         return this.unsplashService.getRateLimitInfo();
+    }
+
+    @Post('pollinations/generate')
+    @ApiOperation({ summary: 'Generate an image with Pollinations.ai and return as stream' })
+    @ApiResponse({ status: 200, description: 'Returns the generated image as a stream.' })
+    @HttpCode(HttpStatus.OK)
+    async generateAndStream(
+        @Body() generateDto: GenerateImageDto,
+        @Res() res: ExpressResponse,
+    ): Promise<void> {
+        const buffer = await this.pollinationsService.generateImageBuffer(generateDto.prompt);
+
+        res.set({
+            'Content-Type': 'image/png',
+            'Content-Disposition': `inline; filename="ai-generated-${Date.now()}.png"`,
+        });
+        res.send(buffer);
     }
 }
