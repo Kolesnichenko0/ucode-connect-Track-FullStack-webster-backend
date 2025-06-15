@@ -35,6 +35,11 @@ import { UPLOAD_ALLOWED_FILE_MIME_TYPES } from '../../core/file-upload/constants
 import * as mime from 'mime-types';
 import { PollinationsService } from '../photos/pollinations.service';
 
+
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { GetProjectsDto } from './dto/get-projects.dto';
+
 @Injectable()
 export class ProjectsService {
     private readonly PROJECT_ASSET_TARGET_TYPE = FileTargetType.PROJECT_ASSET;
@@ -94,7 +99,7 @@ export class ProjectsService {
 
     async findByAuthorId(
         authorId: number,
-        filters: GetProjectsCursorDto,
+        filters: GetProjectsDto,
     ): Promise<CursorPaginationResult<Project, ProjectCursor>> {
         const result =
             await this.projectsPaginationRepository.findByAuthorIdWithCursor(authorId, filters);
@@ -525,7 +530,7 @@ export class ProjectsService {
         return uploadResult;
     }
 
-    private async getDefaultPreview(): Promise<PrismaFile> {
+    async getDefaultPreview(): Promise<PrismaFile> {
         const previewFile = await this.filesService.findAllDefaultsByTargetType(
             this.PROJECT_PREVIEW_TARGET_TYPE,
         );
@@ -637,5 +642,68 @@ export class ProjectsService {
             originalname: `${downloadLocation}.${extension}`,
             size: imageBuffer.length,
         } as Express.Multer.File;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    async saveAsTemplate(dto: UpdateProjectDto): Promise<string> {
+        try {
+            // Створюємо структуру для збереження
+            const templateData = {
+                type: dto.type || 'custom',
+                title: dto.title || 'Custom Template',
+                description: dto.description || 'Generated template',
+                content: dto.content
+            };
+
+            // Шлях до папки з шаблонами
+            const templatesDir = path.join(process.cwd(), 'prisma', 'seeds', 'templates');
+
+            // Створюємо папку, якщо вона не існує
+            await fs.mkdir(templatesDir, { recursive: true });
+
+            // Знаходимо наступний доступний номер файлу
+            let fileNumber = 1;
+            let fileName = `template-content-${fileNumber}.json`;
+            let filePath = path.join(templatesDir, fileName);
+
+            // Перевіряємо, чи існує файл, і якщо так - збільшуємо номер
+            while (await this.fileExists(filePath)) {
+                fileNumber++;
+                fileName = `template-content-${fileNumber}.json`;
+                filePath = path.join(templatesDir, fileName);
+            }
+
+            // Зберігаємо файл
+            await fs.writeFile(filePath, JSON.stringify(templateData, null, 2), 'utf-8');
+
+            console.log(`✅ Template saved as: ${fileName}`);
+            return fileName;
+
+        } catch (error) {
+            console.error('❌ Error saving template:', error);
+            throw new Error(`Failed to save template: ${error.message}`);
+        }
+    }
+
+// Допоміжний метод для перевірки існування файлу
+    private async fileExists(filePath: string): Promise<boolean> {
+        try {
+            await fs.access(filePath);
+            return true;
+        } catch {
+            return false;
+        }
     }
 }

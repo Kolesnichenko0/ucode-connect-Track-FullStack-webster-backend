@@ -1,6 +1,7 @@
 // prisma/seeds/index.ts
 import { FilesSeed } from './files.seed';
 import { UsersSeed } from './users.seed';
+import { ProjectsSeed } from './projects.seed';
 import { CleanupService } from './services/core/cleanup.service';
 import { ValidationService } from './services/core/validation.service';
 
@@ -26,6 +27,9 @@ async function runSeeds() {
 
         const usersSeed = new UsersSeed();
         await usersSeed.run();
+
+        const projectsSeed = new ProjectsSeed();
+        await projectsSeed.run();
 
         console.log('='.repeat(60));
         console.log('🎉 All seeding completed successfully!');
