@@ -19,7 +19,6 @@ export class CleanupService {
             this.cleanupDefaultProjectAssets(),
             this.cleanupDefaultProjectBackgrounds(),
             this.cleanupStorageUploads(),
-            this.cleanupProjects()
         ]);
 
         console.log('✅ Cleanup completed!');
@@ -69,44 +68,6 @@ export class CleanupService {
             }
         } catch (error) {
             console.error('❌ Error cleaning storage uploads:', error);
-        }
-    }
-
-    private async cleanupProjects(): Promise<void> {
-        try {
-            console.log('🧹 Cleaning up old projects...');
-
-            const templatesResult = await this.baseSeeder.projectsService.findAllTemplates({
-                limit: 1000
-            });
-
-            console.log(`🧹 Found ${templatesResult.items.length} template projects to delete`);
-
-            for (const project of templatesResult.items) {
-                await this.baseSeeder.projectsService.delete(project.id);
-            }
-
-            const users = await this.baseSeeder.dbService.user.findMany({
-                select: { id: true, firstName: true, lastName: true }
-            });
-
-            let totalUserProjects = 0;
-
-            for (const user of users) {
-                const userProjectsResult = await this.baseSeeder.projectsService.findByAuthorId(user.id, {
-                    limit: 1000
-                });
-
-                totalUserProjects += userProjectsResult.items.length;
-
-                for (const project of userProjectsResult.items) {
-                    await this.baseSeeder.projectsService.delete(project.id);
-                }
-            }
-
-            console.log(`✅ Deleted ${templatesResult.items.length} template projects and ${totalUserProjects} user projects`);
-        } catch (error) {
-            console.error('❌ Error cleaning projects:', error);
         }
     }
 }

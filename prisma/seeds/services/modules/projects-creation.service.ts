@@ -73,7 +73,6 @@ export class ProjectsCreationService {
                     isTemplate: true,
                 };
 
-                // Створюємо проект точно так, як він описаний в JSON
                 const project = await this.baseSeeder.projectsService.create(projectData);
                 createdTemplateIds.push(project.id);
 
@@ -102,7 +101,6 @@ export class ProjectsCreationService {
 
             console.log(`👤 Creating ${totalProjectCount} projects for user ${user.firstName} ${user.lastName}`);
 
-            // 1. Створюємо "особливі" проекти шляхом копіювання системних шаблонів
             for (let i = 0; i < SPECIAL_PROJECTS_PER_USER; i++) {
                 try {
                     const randomTemplateId = faker.helpers.arrayElement(templateProjectIds);
@@ -113,7 +111,6 @@ export class ProjectsCreationService {
                 }
             }
 
-            // 2. Створюємо решту проектів з простими фігурами
             const simpleProjectsCount = totalProjectCount - SPECIAL_PROJECTS_PER_USER;
             for (let i = 0; i < simpleProjectsCount; i++) {
                 try {
@@ -122,7 +119,6 @@ export class ProjectsCreationService {
                         title: this.generateUserProjectTitle(),
                         type: templateType.type,
                         description: faker.lorem.sentence(),
-                        // Генеруємо контент з фігурами і БЕЗ thumbnailUrl
                         content: this.generateShapeBasedContent(templateType),
                         isTemplate: false,
                     };
@@ -150,7 +146,7 @@ export class ProjectsCreationService {
         for (let i = 0; i < shapeCount; i++) {
             const isRect = faker.datatype.boolean();
             const width = faker.number.int({ min: 50, max: 400 });
-            const height = isRect ? faker.number.int({ min: 50, max: 400 }) : width; // circle
+            const height = isRect ? faker.number.int({ min: 50, max: 400 }) : width;
 
             renderableObjects.push({
                 id: faker.string.uuid(),
@@ -173,7 +169,6 @@ export class ProjectsCreationService {
             showGrid: false,
             gridColor: 'black',
             renderableObjects,
-            // Важливо: ми НЕ передаємо thumbnailUrl, щоб сервіс використав дефолтне прев'ю
         };
     }
 }
