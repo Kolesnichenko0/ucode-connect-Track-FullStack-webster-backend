@@ -198,7 +198,6 @@ export class ProjectsController {
         description: 'Access denied',
     })
     async remove(
-        //TODO: Do test with project assets
         @Param('id') id: number,
     ): Promise<{ message: string }> {
         await this.projectsService.delete(id);
@@ -298,7 +297,7 @@ export class ProjectsController {
         @Body() importDto: ImportUnsplashDto,
         @UserId() userId: number,
     ): Promise<AddUnsplashPhotoResponseDto>{
-        return this.projectsService.addUnsplashPhotoToProject(id, importDto, userId)
+        return this.projectsService.addUnsplashPhotoToProject(id, importDto, userId);
     }
 
     @Post(':id/copy')
@@ -378,6 +377,4 @@ export class ProjectsController {
             userId,
         );
     }
-
-
 }
