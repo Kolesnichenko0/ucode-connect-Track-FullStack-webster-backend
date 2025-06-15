@@ -44,6 +44,7 @@ import { Project, ProjectWithBasic } from '../../modules/projects/entities/proje
 import { FileOwnerGuard } from '../files/guards/file-owner.guard';
 import { CursorPaginationResult, ProjectCursor } from '../../common/pagination/cursor';
 import { AfterCursorQueryParseInterceptor } from '../../common/interceptors/after-cursor.interceptor';
+import { GetProjectsDto } from '../../modules/projects/dto/get-projects.dto';
 
 @Controller('users')
 @ApiTags('Users')
@@ -482,8 +483,10 @@ export class UsersController {
     })
     async getUserProjects(
         @Param('id') id: number,
-        @Query() query: GetProjectsCursorDto
+        @Query() query: GetProjectsDto
     ): Promise<CursorPaginationResult<Project, ProjectCursor>> {
+        console.log("query: ", query)
+
         await this.usersService.findById(id);
 
         return this.projectsService.findByAuthorId(id, query);

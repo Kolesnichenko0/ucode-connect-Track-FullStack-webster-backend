@@ -35,6 +35,11 @@ import { UPLOAD_ALLOWED_FILE_MIME_TYPES } from '../../core/file-upload/constants
 import * as mime from 'mime-types';
 import { PollinationsService } from '../photos/pollinations.service';
 
+
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { GetProjectsDto } from './dto/get-projects.dto';
+
 @Injectable()
 export class ProjectsService {
     private readonly PROJECT_ASSET_TARGET_TYPE = FileTargetType.PROJECT_ASSET;
@@ -94,7 +99,7 @@ export class ProjectsService {
 
     async findByAuthorId(
         authorId: number,
-        filters: GetProjectsCursorDto,
+        filters: GetProjectsDto,
     ): Promise<CursorPaginationResult<Project, ProjectCursor>> {
         const result =
             await this.projectsPaginationRepository.findByAuthorIdWithCursor(authorId, filters);
@@ -525,7 +530,7 @@ export class ProjectsService {
         return uploadResult;
     }
 
-    private async getDefaultPreview(): Promise<PrismaFile> {
+    async getDefaultPreview(): Promise<PrismaFile> {
         const previewFile = await this.filesService.findAllDefaultsByTargetType(
             this.PROJECT_PREVIEW_TARGET_TYPE,
         );

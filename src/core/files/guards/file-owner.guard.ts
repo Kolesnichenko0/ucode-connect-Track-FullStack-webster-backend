@@ -1,6 +1,7 @@
 // src/core/files/guards/file-owner.guard.ts
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { FilesService } from '../files.service';
+import { FileTargetType } from '@prisma/client';
 
 @Injectable()
 export class FileOwnerGuard implements CanActivate {
@@ -21,7 +22,7 @@ export class FileOwnerGuard implements CanActivate {
       throw new BadRequestException('There is another route for default assets');
     }
 
-    if (user.userId != file.authorId) {
+    if (user.userId != file.authorId && !(file.targetType === FileTargetType.PROJECT_PREVIEW && file.authorId === null)) {
       throw new ForbiddenException(
         'You can only access your own file',
       );

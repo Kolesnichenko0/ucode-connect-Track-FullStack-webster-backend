@@ -16,6 +16,10 @@ import storageConfig from '../../../../src/config/configs/storage.config';
 import appConfig from '../../../../src/config/configs/app.config';
 import assetsConfig from '../../../../src/config/configs/assets.config';
 import unsplashConfig from '../../../../src/config/configs/unsplash.config';
+import { ProjectsRepository } from '../../../../src/modules/projects/projects.repository';
+import { ProjectsPaginationRepository } from '../../../../src/modules/projects/projects-pagination.repository';
+import { PollinationsService } from '../../../../src/modules/photos/pollinations.service';
+import { ProjectsService } from '../../../../src/modules/projects/projects.service';
 
 export class BaseSeederService {
     private static instance: BaseSeederService;
@@ -30,6 +34,10 @@ export class BaseSeederService {
     public readonly usersService: UsersService;
     public readonly usersRepository: UsersRepository;
     public readonly unsplashService: UnsplashService;
+    public readonly projectsRepository: ProjectsRepository
+    public readonly projectsService: ProjectsService
+    public readonly projectsPaginationRepository: ProjectsPaginationRepository
+    public readonly pollinationsService: PollinationsService
 
     private constructor() {
         console.log('🔧 Initializing seeder services...');
@@ -66,6 +74,21 @@ export class BaseSeederService {
             this.fileUploadService,
             this.filesService,
             this.fileUrlTransformerService
+        );
+
+        // Projects services
+        this.projectsRepository = new ProjectsRepository(this.dbService);
+        const projectsPaginationRepository = new ProjectsPaginationRepository(this.dbService);
+        const pollinationsService = new PollinationsService();
+
+        this.projectsService = new ProjectsService(
+            this.projectsRepository,
+            this.filesService,
+            this.fileUploadService,
+            this.filePathsService,
+            projectsPaginationRepository,
+            this.unsplashService,
+            pollinationsService
         );
 
         // Unsplash service

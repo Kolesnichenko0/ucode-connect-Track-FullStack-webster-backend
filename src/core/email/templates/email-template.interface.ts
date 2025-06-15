@@ -1,4 +1,5 @@
 // src/core/email/templates/email-template.interface.ts
+
 export interface EmailTemplateInterface {
     getConfirmationEmailTemplate: (
         confirmationLink: string,
@@ -12,10 +13,9 @@ export interface EmailTemplateInterface {
         fullName: string,
     ) => string;
 
-    getWelcomeCompanyEmailTemplate: (
-        companyOwnerName: string,
-        companyTitle: string,
+    getWelcomeEmailTemplate: (
+        fullName: string,
         redirectLink: string,
-        serviceName: string,
+        projectName: string,
     ) => string;
 }
