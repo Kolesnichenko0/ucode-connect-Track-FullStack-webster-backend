@@ -1,36 +1,109 @@
 // src/core/email/email.service.ts
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
+import { ApiConfigService } from '../../config/api-config.service';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ApiConfigService } from '../../config/api-config.service';
+import { EmailTemplateInterface } from './templates/email-template.interface';
 import emailTemplates from './templates/email.templates';
 
-@Injectable()
-export class EmailService implements OnModuleInit {
-    private transporter: nodemailer.Transporter;
-    private appName: string;
-    private logo: Buffer;
 
-    constructor(private readonly configService: ApiConfigService) {}
+@Injectable()
+export class EmailService {
+    private appName: string;
+    private logo: any;
+    private templates: EmailTemplateInterface;
+    private transporter: nodemailer.Transporter;
+
+    constructor(
+        private readonly cs: ApiConfigService,
+    ) {
+        this.templates = emailTemplates;
+    }
 
     async onModuleInit() {
-        this.appName = this.configService.get('app.name');
+        await this.initLogo();
+        this.transporter = await this.createTransport();
+        await this.verifyTransporter();
+    }
 
-        // Ініціалізуємо логотип
-        const logoPath = this.configService.get('assets.paths.logos');
-        const logoFilename = this.configService.get('assets.filenames.logo');
-        const fullLogoPath = path.resolve(logoPath, logoFilename);
+    private async initLogo() {
+        const projectPath = this.cs.get('assets.paths.logos');
+        const logoFilename = this.cs.get('assets.filenames.logo');
 
-        try {
-            this.logo = fs.readFileSync(fullLogoPath);
-        } catch (error) {
-            console.error(`Failed to read logo file at: ${fullLogoPath}`, error);
-            throw error; // Зупиняємо ініціалізацію, якщо логотип не знайдено
+        const fullLogoPath = path.join(projectPath, logoFilename);
+        this.appName = this.cs.get('app.name');
+        this.logo = await this.readLogoFile(fullLogoPath);
+    }
+
+    private async readLogoFile(filePath: string): Promise<Buffer> {
+        return fs.readFileSync(path.resolve(filePath));
+    }
+
+    private async readHtmlFile(filePath: string): Promise<string> {
+        return fs.readFileSync(path.resolve(filePath), 'utf-8');
+    }
+
+    private async createTransport() {
+        const useGmail = this.cs.get('google.useGmail');
+
+        if (useGmail) {
+            const senderEmail = this.cs.get('google.gmailApi.senderEmail');
+            if (this.cs.get('google.gmailApi.useServiceAccount')) {
+                const keyFilePath = this.cs.get('google.gmailApi.serviceAccountKey');
+
+                let serviceAccountCredentials;
+                try {
+                    const keyFileContent = fs.readFileSync(keyFilePath, 'utf8');
+                    serviceAccountCredentials = JSON.parse(keyFileContent);
+                } catch (error) {
+                    console.error('Failed to read or parse service account key file:', error);
+                    throw error;
+                }
+
+                if (!serviceAccountCredentials.client_id || !serviceAccountCredentials.private_key) {
+                    const errorMessage = 'Service account key file is missing client_id or private_key.';
+                    console.error(errorMessage, serviceAccountCredentials);
+                    throw new Error(errorMessage);
+                }
+
+
+                return nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: {
+                        type: 'OAuth2',
+                        user: senderEmail,
+                        serviceClient: serviceAccountCredentials.client_id,
+                        privateKey: serviceAccountCredentials.private_key,
+                    },
+                });
+            } else {
+                console.log('Using Gmail with OAuth2 (client ID, client secret, refresh token).');
+                return nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: {
+                        type: 'OAuth2',
+                        user: senderEmail,
+                        clientId: this.cs.get('google.gmailApi.clientId'),
+                        clientSecret: this.cs.get('google.gmailApi.clientSecret'),
+                        refreshToken: this.cs.get('google.gmailApi.refreshToken'),
+                    },
+                });
+            }
+        } else {
+            console.log('Using Ethereal');
+            return nodemailer.createTransport({
+                host: this.cs.get('ethereal.host'),
+                port: this.cs.get('ethereal.port'),
+                auth: {
+                    user: this.cs.get('ethereal.user'),
+                    pass: this.cs.get('ethereal.password'),
+                },
+            });
         }
+    }
 
-        // Створюємо та верифікуємо транспортер
-        this.transporter = this.createTransport();
+    private async verifyTransporter() {
         try {
             await this.transporter.verify();
             console.log('Nodemailer transporter is ready to send emails.');
@@ -40,99 +113,50 @@ export class EmailService implements OnModuleInit {
         }
     }
 
-    private createTransport(): nodemailer.Transporter {
-        if (this.configService.get('google.useGmail')) {
-            const senderEmail = this.configService.get('google.gmailApi.senderEmail');
-            const authConfig = this.configService.get('google.gmailApi.useServiceAccount')
-                ? this.getServiceAccountAuth(senderEmail)
-                : this.getOAuth2Auth(senderEmail);
-
-            return nodemailer.createTransport({ service: 'gmail', auth: authConfig });
-        }
-
-        console.log('Using Ethereal for email transport.');
-        return nodemailer.createTransport({
-            host: this.configService.get('ethereal.host'),
-            port: this.configService.get('ethereal.port'),
-            auth: {
-                user: this.configService.get('ethereal.user'),
-                pass: this.configService.get('ethereal.password'),
-            },
-        });
-    }
-
-    private getServiceAccountAuth(user: string) {
-        const keyFilePath = this.configService.get('google.gmailApi.serviceAccountKey');
-        const keyFileContent = fs.readFileSync(keyFilePath, 'utf8');
-        const credentials = JSON.parse(keyFileContent);
-
-        return {
-            type: 'OAuth2',
-            user,
-            serviceClient: credentials.client_id,
-            privateKey: credentials.private_key,
-        };
-    }
-
-    private getOAuth2Auth(user: string) {
-        return {
-            type: 'OAuth2',
-            user,
-            clientId: this.configService.get('google.gmailApi.clientId'),
-            clientSecret: this.configService.get('google.gmailApi.clientSecret'),
-            refreshToken: this.configService.get('google.gmailApi.refreshToken'),
-        };
-    }
-
-    private async sendEmail(to: string, subject: string, html: string): Promise<void> {
+    async sendEmail(to: string, subject: string, html: string): Promise<void> {
         try {
             const info = await this.transporter.sendMail({
-                from: `"${this.appName}" <${this.configService.get('google.gmailApi.senderEmail')}>`,
+                from: this.cs.get('google.gmailApi.senderEmail'),
                 to,
                 subject,
                 html,
                 attachments: [
                     {
-                        filename: this.configService.get('assets.filenames.logo'),
+                        filename: this.cs.get('assets.paths.logos'),
                         content: this.logo,
-                        cid: 'logo@project', // Content-ID для використання в HTML
+                        cid: 'logo@project',
                     },
                 ],
             });
-            console.log(`Email sent successfully to ${to}: ${info.messageId}`);
+            console.log(`Email sent successfully: ${info.messageId}`);
         } catch (error) {
             console.error(`Failed to send email to ${to}`, error);
         }
     }
 
-    async sendConfirmationEmail(to: string, confirmationLink: string, fullName: string): Promise<void> {
-        const subject = `[Action Required] Confirm Your Email for ${this.appName}`;
-        const html = emailTemplates.getConfirmationEmailTemplate(
+    async sendConfirmationEmail(
+        to: string,
+        confirmationLink: string,
+        fullName: string,
+    ): Promise<void> {
+        const html = this.templates.getConfirmationEmailTemplate(
             confirmationLink,
             this.appName,
-            fullName,
+            fullName
         );
-        await this.sendEmail(to, subject, html);
+        await this.sendEmail(
+            to,
+            `[Action Required] Confirm Email | ${this.appName}`,
+            html,
+        );
     }
 
     async sendResetPasswordEmail(to: string, resetLink: string, fullName: string): Promise<void> {
-        const subject = `[Action Required] Reset Your ${this.appName} Password`;
-        const html = emailTemplates.getResetPasswordEmailTemplate(
-            resetLink,
-            this.appName,
-            fullName,
+        const html = this.templates.getResetPasswordEmailTemplate(resetLink, this.appName, fullName);
+        await this.sendEmail(
+            to,
+            `[Action Required] Password Reset | ${this.appName}`,
+            html,
         );
-        await this.sendEmail(to, subject, html);
-    }
-
-    // Оновлений метод, що відповідає інтерфейсу
-    async sendWelcomeEmail(to: string, redirectLink: string, fullName: string): Promise<void> {
-        const subject = `Welcome to ${this.appName}! Your Canvas Awaits 🎉`;
-        const html = emailTemplates.getWelcomeEmailTemplate(
-            fullName,
-            redirectLink,
-            this.appName,
-        );
-        await this.sendEmail(to, subject, html);
     }
 }
