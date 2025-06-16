@@ -9,7 +9,7 @@ import { plainToInstance } from 'class-transformer';
 import { ProjectsRepository } from './projects.repository';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { GetProjectsCursorDto } from './dto/get-projects-cursor.dto'; //TODO: где должжна быть эта ДТОшка
+import { GetProjectsCursorDto } from './dto/get-projects-cursor.dto';
 import { ProjectFilesResponseDto } from './dto/project-files-response.dto';
 import { CopyProjectResponseDto } from './dto/copy-project-response.dto';
 import { Project, SERIALIZATION_GROUPS } from './entities/project.entity';
@@ -33,6 +33,12 @@ import { AddUnsplashPhotoResponseDto } from './dto/add-unsplash-photo-response.d
 import { fromBuffer } from 'file-type';
 import { UPLOAD_ALLOWED_FILE_MIME_TYPES } from '../../core/file-upload/constants/file-upload.contsants';
 import * as mime from 'mime-types';
+import { PollinationsService } from '../photos/pollinations.service';
+
+
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { GetProjectsDto } from './dto/get-projects.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -48,6 +54,7 @@ export class ProjectsService {
         private readonly filePathsService: FilePathsService,
         private readonly projectsPaginationRepository: ProjectsPaginationRepository,
         private readonly unsplashService: UnsplashService,
+        private readonly pollinationsService: PollinationsService,
     ) {}
 
     async create(dto: CreateProjectDto, authorId?: number): Promise<Project> {
@@ -66,7 +73,7 @@ export class ProjectsService {
             targetId: project.id,
         });
 
-        // return this.enrichProjectWithPreviewUrl(project);//TODO: Tут же надо по идее редачить Content, так как в контенте хранится только fileKey
+        // return this.enrichProjectWithPreviewUrl(project);//TODO: In this case it is necessary to edit Content, because only fileKey is stored in Content
         return this.resolveFileKeysToUrls(project);
     }
 
@@ -92,7 +99,7 @@ export class ProjectsService {
 
     async findByAuthorId(
         authorId: number,
-        filters: GetProjectsCursorDto,
+        filters: GetProjectsDto,
     ): Promise<CursorPaginationResult<Project, ProjectCursor>> {
         const result =
             await this.projectsPaginationRepository.findByAuthorIdWithCursor(authorId, filters);
@@ -360,10 +367,10 @@ export class ProjectsService {
             previewFileKey = duplicateResult.fileKey;
             processedContent.thumbnailFileKey = previewFileKey;
         } else if (!content.previewFileKey) {
-            const defaultPreview = await this.filesService.findAllDefaultsByTargetType(FileTargetType.PROJECT_PREVIEW);
+            const defaultPreview = await this.getDefaultPreview();
 
-            previewFileKey = defaultPreview[0].fileKey;
-            previewFileId = defaultPreview[0].id
+            previewFileKey = defaultPreview.fileKey;
+            previewFileId = defaultPreview.id
             processedContent.thumbnailFileKey = previewFileKey;
         } else {
             throw new BadRequestException("Bad content structure")
@@ -514,7 +521,7 @@ export class ProjectsService {
             },
         );
 
-        if (!uploadResult || typeof uploadResult.fileId !== 'number') {
+        if (!uploadResult) {
             throw new Error(
                 'File duplication failed: could not retrieve new file ID.',
             );
@@ -523,14 +530,14 @@ export class ProjectsService {
         return uploadResult;
     }
 
-    private async getDefaultPreviewId(): Promise<number> {
+    async getDefaultPreview(): Promise<PrismaFile> {
         const previewFile = await this.filesService.findAllDefaultsByTargetType(
             this.PROJECT_PREVIEW_TARGET_TYPE,
         );
         if (!previewFile || previewFile.length === 0) {
             throw new ImATeapotException('Default avatar file not found');
         }
-        return previewFile[0].id;
+        return previewFile[0];
     }
 
     async removeAssetAndUpdateContent(

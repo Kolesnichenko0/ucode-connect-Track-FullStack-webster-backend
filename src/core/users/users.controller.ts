@@ -54,6 +54,7 @@ import {
 import { AfterCursorQueryParseInterceptor } from '../../common/interceptors/after-cursor.interceptor';
 import { ExternalAccount } from '../external-accounts/entities/external-account.entity';
 import { ExternalAccountsService } from '../external-accounts/external-accounts.service';
+import { GetProjectsDto } from '../../modules/projects/dto/get-projects.dto';
 
 @Controller('users')
 @ApiTags('Users')
@@ -682,6 +683,63 @@ export class UsersController {
         @Req() req: Request,
     ): Promise<User> {
         return this.usersService.updateUserAvatar(id, file);
+    }
+
+    @Get(':id/projects')
+    @UseGuards(AccountOwnerGuard)
+    @UseInterceptors(AfterCursorQueryParseInterceptor)
+    @ApiOperation({ summary: 'Get user projects' })
+    @ApiParam({
+        name: 'id',
+        type: 'number',
+        description: 'User ID',
+        example: 1,
+    })
+    @ApiQuery({
+        name: 'is_template',
+        type: 'boolean',
+        description: 'Filter by template status',
+        example: false,
+        required: false,
+    })
+    @ApiQuery({
+        name: 'title',
+        type: 'string',
+        description: 'Search by project title',
+        example: 'design',
+        required: false,
+    })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: 'User projects successfully retrieved',
+        schema: {
+            type: 'object',
+            properties: {
+                projects: {
+                    type: 'array',
+                    items: { $ref: '#/components/schemas/Project' },
+                },
+                total: { type: 'number', example: 25 },
+            },
+        },
+    })
+    @ApiResponse({
+        status: HttpStatus.NOT_FOUND,
+        description: 'User not found',
+    })
+    @ApiResponse({
+        status: HttpStatus.FORBIDDEN,
+        description: 'Access denied',
+    })
+    async getUserProjects(
+        @Param('id') id: number,
+        @Query() query: GetProjectsDto
+    ): Promise<CursorPaginationResult<Project, ProjectCursor>> {
+        console.log("query: ", query)
+
+        await this.usersService.findById(id);
+
+        return this.projectsService.findByAuthorId(id, query);
     }
 
     @Delete(':id/avatar/:fileKey')

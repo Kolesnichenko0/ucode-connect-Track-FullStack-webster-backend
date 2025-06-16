@@ -159,23 +159,4 @@ export class EmailService {
             html,
         );
     }
-
-    async sendWelcomeCompanyEmail(
-        to: string,
-        companyOwnerName: string,
-        companyTitle: string,
-        redirectLink: string,
-    ): Promise<void> {
-        const html = this.templates.getWelcomeCompanyEmailTemplate(
-            companyOwnerName,
-            companyTitle,
-            redirectLink,
-            this.appName,
-        );
-        await this.sendEmail(
-            to,
-            `Welcome to ${this.appName} – Start Selling Tickets Today! 🎉`,
-            html,
-        );
-    }
 }
