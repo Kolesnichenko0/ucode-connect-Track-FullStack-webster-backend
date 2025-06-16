@@ -134,6 +134,7 @@ export class ProjectsController {
         @Body() createProjectDto: CreateProjectDto,
         @UserId() userId: number,
     ): Promise<Project> {
+        console.log(createProjectDto.content)
         return this.projectsService.create(createProjectDto, userId);
     }
 
