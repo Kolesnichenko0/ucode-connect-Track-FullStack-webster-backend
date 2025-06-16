@@ -383,10 +383,10 @@ describe('UsersController', () => {
             const id = 1;
             const updateUserPasswordDto = UsersFaker.generateUpdateUserPasswordDto();
             const updatedUser: User = UsersFaker.generateFakeUser();
-            usersService.updatePassword.mockResolvedValue(updatedUser);
+            usersService.setOrUpdatePassword.mockResolvedValue(updatedUser);
 
             const result = await usersController.updatePassword(id, updateUserPasswordDto);
-            expect(usersService.updatePassword).toHaveBeenCalledWith(
+            expect(usersService.setOrUpdatePassword).toHaveBeenCalledWith(
                 id,
                 updateUserPasswordDto,
             );
@@ -397,12 +397,12 @@ describe('UsersController', () => {
             const id = 1;
             const updateUserPasswordDto = UsersFaker.generateUpdateUserPasswordDto();
             const error = new NotFoundException('User not found');
-            usersService.updatePassword.mockRejectedValue(error);
+            usersService.setOrUpdatePassword.mockRejectedValue(error);
 
             await expect(
                 usersController.updatePassword(id, updateUserPasswordDto),
             ).rejects.toThrow(error);
-            expect(usersService.updatePassword).toHaveBeenCalledWith(
+            expect(usersService.setOrUpdatePassword).toHaveBeenCalledWith(
                 id,
                 updateUserPasswordDto,
             );

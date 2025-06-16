@@ -45,12 +45,12 @@ export class EmailService {
     }
 
     private async createTransport() {
-        const useGmail = this.cs.get('google.useGmail');
+        const useGmail = this.cs.get('google.gmail.enabled');
 
         if (useGmail) {
-            const senderEmail = this.cs.get('google.gmailApi.senderEmail');
-            if (this.cs.get('google.gmailApi.useServiceAccount')) {
-                const keyFilePath = this.cs.get('google.gmailApi.serviceAccountKey');
+            const senderEmail = this.cs.get('google.gmail.senderEmail');
+            if (this.cs.get('google.gmail.useServiceAccount')) {
+                const keyFilePath = this.cs.get('google.gmail.serviceAccountKey');
 
                 let serviceAccountCredentials;
                 try {
@@ -84,9 +84,9 @@ export class EmailService {
                     auth: {
                         type: 'OAuth2',
                         user: senderEmail,
-                        clientId: this.cs.get('google.gmailApi.clientId'),
-                        clientSecret: this.cs.get('google.gmailApi.clientSecret'),
-                        refreshToken: this.cs.get('google.gmailApi.refreshToken'),
+                        clientId: this.cs.get('google.gmail.clientId'),
+                        clientSecret: this.cs.get('google.gmail.clientSecret'),
+                        refreshToken: this.cs.get('google.gmail.refreshToken'),
                     },
                 });
             }
@@ -116,7 +116,7 @@ export class EmailService {
     async sendEmail(to: string, subject: string, html: string): Promise<void> {
         try {
             const info = await this.transporter.sendMail({
-                from: this.cs.get('google.gmailApi.senderEmail'),
+                from: this.cs.get('google.gmail.senderEmail'),
                 to,
                 subject,
                 html,

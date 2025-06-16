@@ -1,5 +1,5 @@
 // src/core/auth/auth.module.ts
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
@@ -17,12 +17,15 @@ import {
 import { EmailModule } from 'src/core/email/email.module';
 import { JwtModule } from 'src/core/jwt/jwt.module';
 import { APP_GUARD } from '@nestjs/core';
+import { PassportModule } from '@nestjs/passport';
+
 @Module({
     imports: [
-        forwardRef(() => UsersModule),
+        UsersModule,
         EmailModule,
         RefreshTokenNoncesModule,
         JwtModule,
+        PassportModule.register({}),
     ],
     controllers: [AuthController],
     providers: [
@@ -40,6 +43,6 @@ import { APP_GUARD } from '@nestjs/core';
         JwtResetPasswordGuard,
         JwtConfirmEmailGuard,
     ],
-    exports: [AuthService],
+    exports: [AuthService, PassportModule],
 })
-export class AuthModule { }
+export class AuthModule {}

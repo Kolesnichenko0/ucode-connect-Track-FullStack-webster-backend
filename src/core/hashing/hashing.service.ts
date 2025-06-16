@@ -1,24 +1,21 @@
 // src/core/hashing/hashing.service.ts
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-
-export enum HashType {
-    PASSWORD = 'password',
-}
+import { HashType} from './hashing.enums';
+import { HashingConstants } from './hashing.constants';
 
 @Injectable()
 export class HashingService {
-    private readonly saltRoundsConfig: Record<HashType, number>;
-    private readonly PASSWORD_SALT_ROUNDS: number = 10;
+    private readonly bcryptSaltRoundsConfig: Record<HashType, number>;
 
     constructor() {
-        this.saltRoundsConfig = {
-            [HashType.PASSWORD]: this.PASSWORD_SALT_ROUNDS
+        this.bcryptSaltRoundsConfig = {
+            [HashType.PASSWORD]: HashingConstants.BCRYPT_PASSWORD_SALT_ROUNDS,
         };
     }
 
     async hash(plainText: string, type: HashType): Promise<string> {
-        return bcrypt.hash(plainText, this.saltRoundsConfig[type]);
+        return bcrypt.hash(plainText, this.bcryptSaltRoundsConfig[type]);
     }
 
     async compare(

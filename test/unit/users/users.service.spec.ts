@@ -323,7 +323,7 @@ describe('UsersService', () => {
             passwordService.hash.mockResolvedValue(hashedNewPassword);
             usersRepository.update.mockResolvedValue(updatedUser);
 
-            const result = await usersService.updatePassword(
+            const result = await usersService.setOrUpdatePassword(
                 userId,
                 updateUserPasswordDto
             );
@@ -356,7 +356,7 @@ describe('UsersService', () => {
             passwordService.compare.mockResolvedValue(false);
 
             await expect(
-                usersService.updatePassword(userId, updateUserPasswordDto)
+                usersService.setOrUpdatePassword(userId, updateUserPasswordDto)
             ).rejects.toThrow(UnauthorizedException);
             expect(usersRepository.findById).toHaveBeenCalledWith(userId);
             expect(passwordService.compare).toHaveBeenCalledWith(
@@ -375,7 +375,7 @@ describe('UsersService', () => {
             usersRepository.findById.mockResolvedValue(null);
 
             await expect(
-                usersService.updatePassword(userId, updateUserPasswordDto)
+                usersService.setOrUpdatePassword(userId, updateUserPasswordDto)
             ).rejects.toThrow(NotFoundException);
             expect(usersRepository.findById).toHaveBeenCalledWith(userId);
             expect(passwordService.compare).not.toHaveBeenCalled();
@@ -394,7 +394,7 @@ describe('UsersService', () => {
             usersRepository.update.mockResolvedValue(null);
 
             await expect(
-                usersService.updatePassword(userId, updateUserPasswordDto)
+                usersService.setOrUpdatePassword(userId, updateUserPasswordDto)
             ).rejects.toThrow(NotFoundException);
             expect(usersRepository.findById).toHaveBeenCalledWith(userId);
             expect(passwordService.compare).toHaveBeenCalledWith(

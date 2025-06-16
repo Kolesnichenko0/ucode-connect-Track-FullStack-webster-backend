@@ -2,7 +2,7 @@
 import { z } from 'zod';
 import { ConfigValidator } from '../config.validator';
 import { Env } from '../config.interface';
-import { buildBaseUrl } from '../../common/utils';
+import { buildBaseUrl, buildUrl } from '../../common/utils';
 
 const AppSchema = z.object({
     APP_NAME: z.string().default('webster'),
@@ -51,6 +51,7 @@ const getAppConfig = () => {
         config.APP_CLIENT_HOST,
         config.APP_CLIENT_PORT,
     );
+    const clientUrlAfterExternalAuth = buildUrl(clientUrl, 'projects');
 
     return {
         app: {
@@ -67,6 +68,7 @@ const getAppConfig = () => {
             clientHost: config.APP_CLIENT_HOST,
             clientPort: config.APP_CLIENT_PORT,
             clientUrl,
+            clientUrlAfterExternalAuth,
             cors: {
                 methods: config.APP_CORS_METHODS,
                 allowedHeaders: config.APP_CORS_ALLOWED_HEADERS,

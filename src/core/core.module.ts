@@ -12,10 +12,13 @@ import { HashingModule } from './hashing/hashing.module';
 import { FilesModule } from './files/files.module';
 import { FileUploadModule } from './file-upload/file-upload.module';
 import { UnsplashModule } from './unsplash/unsplash.module';
+import { GoogleAuthModule } from './auth/google/google-auth.module';
+import { ExternalAccountsModule } from './external-accounts/external-accounts.module';
 
 @Module({
     imports: [
         AuthModule,
+        GoogleAuthModule,
         DatabaseModule,
         EmailModule,
         FilesModule,
@@ -25,7 +28,8 @@ import { UnsplashModule } from './unsplash/unsplash.module';
         JwtModule,
         RefreshTokenNoncesModule,
         UsersModule,
-        UnsplashModule
+        UnsplashModule,
+        ExternalAccountsModule,
     ],
 })
 export class CoreModule { }

@@ -3,8 +3,9 @@ import {
     User as PrismaUser,
     RefreshTokenNonce as PrismaRefreshTokenNonce,
     File as PrismaFile,
+    ExternalAccount as PrismaExternalAccount,
 } from '@prisma/client';
-import { Expose, Transform } from 'class-transformer';
+import { Expose } from 'class-transformer';
 import { ApiProperty, PickType } from '@nestjs/swagger';
 
 export const SERIALIZATION_GROUPS = {
@@ -81,6 +82,9 @@ export class User implements PrismaUser {
     refreshTokenNonces?: PrismaRefreshTokenNonce[];
 
     @Expose({ groups: ['private'] })
+    externalAccounts?: PrismaExternalAccount[];
+
+    @Expose({ groups: ['private'] })
     avatarFile?: PrismaFile;
 
     @Expose({ groups: ['basic'] })
@@ -91,6 +95,15 @@ export class User implements PrismaUser {
         example: 'https://example.com/assets/user-avatars/abc123.jpg',
     })
     avatarFileURL?: string;
+
+    @Expose({ groups: ['basic'] })
+    @ApiProperty({
+        description: 'URL of user avatar from external provider',
+        nullable: true,
+        type: 'string',
+        example: 'https://lh3.googleusercontent.com/a/ACg8ocJ...=s96-c',
+    })
+    externalProviderAvatarUrl?: string;
 }
 
 export class UserWithBasic extends PickType(User, [
