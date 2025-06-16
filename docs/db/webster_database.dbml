@@ -33,13 +33,14 @@ Table external_accounts {
   "provider" ENUM('google') [not null]
   "account_id" VARCHAR(255) [not null]
   "avatar_url" VARCHAR(255)
+  "refresh_token" TEXT
   "created_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
   "updated_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
 
   Indexes {
     user_id [name: "fk_external_accounts_user_id"]
-    (account_id, provider) [name: "uq_external_accounts_account_id_provider"]
-    (user_id, provider) [name: "idx_external_accounts_user_id_provider"]
+    (account_id, provider) [unique, name: "uq_external_accounts_account_id_provider"]
+    (user_id, provider) [unique, name: "uq_external_accounts_user_id_provider"]
   }
 }
 
@@ -49,7 +50,7 @@ Table files {
   "is_default" BOOL [not null, default: false]
   "target_id" INT
   "target_type" ENUM('user_avatar', 'project_asset', 'project_preview', 'project_background', 'project_element', 'font_asset') [not null]
-  "file_key" VARCHAR(100) [not null, unique]
+  "file_key" VARCHAR(100) [not null]
   "mime_type" VARCHAR(100) [not null]
   "extension" VARCHAR(10) [not null]
   "created_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
@@ -58,14 +59,14 @@ Table files {
 
   Indexes {
     author_id [name: "fk_files_author_id"]
-    file_key [name: "uq_files_file_key"]
+    file_key [unique, name: "uq_files_file_key"]
   }
 }
 
 Table projects {
   "id" INT [pk, increment]
   "author_id" INT
-  "preview_file_id" INT [not null, unique]
+  "preview_file_id" INT [not null]
   "is_template" BOOL [not null, default: false]
   "title" VARCHAR(100) [not null]
   "type" VARCHAR(50) [not null]
@@ -76,7 +77,7 @@ Table projects {
 
   Indexes {
     author_id [name: "fk_projects_author_id"]
-    preview_file_id [name: "uq_fk_projects_preview_file_id"]
+    preview_file_id [name: "fk_projects_preview_file_id"]
     (author_id, title) [name: "idx_projects_author_id_title"]
   }
 }
@@ -84,14 +85,14 @@ Table projects {
 Table fonts {
   "id" INT [pk, increment]
   "user_id" INT [not null]
-  "file_id" INT [not null, unique]
+  "file_id" INT [not null]
   "title" VARCHAR(100) [not null]
   "created_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
   "updated_at" TIMESTAMP [not null, default: `CURRENT_TIMESTAMP`]
 
   Indexes {
     user_id [name: "fk_fonts_user_id"]
-    file_id [name: "uq_fk_fonts_file_id"]
+    file_id [unique, name: "uq_fk_fonts_file_id"]
     (user_id, title) [name: "idx_fonts_user_id_title"]
   }
 }

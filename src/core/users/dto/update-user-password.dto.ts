@@ -1,19 +1,18 @@
 // src/core/users/dto/update-user-password.dto.ts
-import {
-    IsPassword,
-} from '../validators/users.validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsPassword } from '../validators/users.validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateUserPasswordDto {
-    @IsPassword(false)
-    @ApiProperty({
+    @IsPassword(true)
+    @ApiPropertyOptional({
         required: true,
-        description: 'Old Password',
+        description:
+            'Old password. Not required if user has no password set (e.g., registered via Google).',
         nullable: false,
         type: 'string',
         example: 'Password123!',
     })
-    oldPassword: string;
+    oldPassword?: string;
 
     @IsPassword(false)
     @ApiProperty({

@@ -7,6 +7,7 @@ import { IGoogleConfig } from './configs/google.config';
 import { IAssetsConfig } from './configs/assets.config';
 import { IStorageConfig } from './configs/storage.config';
 import { IUnsplashConfig } from './configs/unsplash.config';
+import { IEncryptionConfig } from './configs/encryption.config';
 
 export enum Env {
     DEVELOPMENT = 'development',
@@ -21,7 +22,8 @@ export type IConfig = IAppConfig &
     IGoogleConfig &
     IStorageConfig &
     IAssetsConfig &
-    IUnsplashConfig;
+    IUnsplashConfig &
+    IEncryptionConfig;
 
 type Primitive = string | number | boolean | null | undefined;
 

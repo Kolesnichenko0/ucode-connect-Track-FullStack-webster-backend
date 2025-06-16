@@ -11,6 +11,7 @@ import getGoogleConfig from './configs/google.config';
 import getAssetsConfig from './configs/assets.config';
 import getStorageConfig from './configs/storage.config';
 import getUnsplashConfig from './configs/unsplash.config';
+import getEncryptionConfig from './configs/encryption.config';
 
 @Global()
 @Module({
@@ -25,6 +26,7 @@ import getUnsplashConfig from './configs/unsplash.config';
                 getStorageConfig,
                 getAssetsConfig,
                 getUnsplashConfig,
+                getEncryptionConfig,
             ],
             envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
             isGlobal: true,

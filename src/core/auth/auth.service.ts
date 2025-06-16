@@ -62,6 +62,10 @@ export class AuthService {
     async login(loginDto: LoginDto) {
         const user = await this.usersService.findByEmail(loginDto.email);
 
+        if (!user.password) {
+            throw new UnauthorizedException('User does not have a password set. Please use an external provider to log in or set a password through the reset password flow.');
+        }
+
         const passwordValid = await this.passwordService.compare(
             loginDto.password,
             String(user.password),
@@ -75,23 +79,36 @@ export class AuthService {
             throw new ForbiddenException('User email is unverified');
         }
 
+        const { accessToken, refreshToken } = await this.createAuthTokens(
+            user.id,
+        );
+
+        return {
+            user: await this.usersService.findByIdWithConfidential(user.id),
+            accessToken,
+            refreshToken,
+        };
+    }
+
+    async createAuthTokens(userId: number) {
+        await this.usersService.findByIdWithoutPassword(userId);
         const newNonce = generateNonce();
 
         const accessToken = this.jwtUtils.generateToken(
-            { sub: user.id },
+            { sub: userId },
             'access',
         );
         const refreshToken = this.jwtUtils.generateToken(
-            { sub: user.id, nonce: newNonce },
+            { sub: userId, nonce: newNonce },
             'refresh',
         );
 
         await this.refreshTokenNonceService.create({
-            userId: user.id,
+            userId: userId,
             nonce: newNonce,
         } as CreateRefreshTokenNonceDto);
 
-        return { user: await this.usersService.findByIdWithConfidential(user.id), accessToken, refreshToken };
+        return { accessToken, refreshToken };
     }
 
     async refreshAccessToken(
@@ -120,9 +137,7 @@ export class AuthService {
             const nonceId: number = await this.refreshTokenNonceService
                 .findByNonceAndUserId(userId, refreshNonce)
                 .then((nonce) => nonce.id);
-            await this.refreshTokenNonceService.deleteById(
-                nonceId,
-            );
+            await this.refreshTokenNonceService.deleteById(nonceId);
             return { accessToken, newRefreshToken };
         }
 
@@ -141,9 +156,7 @@ export class AuthService {
             );
         }
 
-        await this.refreshTokenNonceService.deleteById(
-            nonceEntity.id,
-        );
+        await this.refreshTokenNonceService.deleteById(nonceEntity.id);
         return { message: 'Logged out successfully' };
     }
 
@@ -163,7 +176,11 @@ export class AuthService {
             'resetPassword',
         );
 
-        const link = buildUrl(this.clientUrl, '/auth/reset-password/', passwordResetToken);
+        const link = buildUrl(
+            this.clientUrl,
+            '/auth/reset-password/',
+            passwordResetToken,
+        );
 
         this.emailService.sendResetPasswordEmail(
             user.email,
@@ -179,9 +196,7 @@ export class AuthService {
             userId,
             newPasswordDto.newPassword,
         );
-        await this.refreshTokenNonceService.deleteByUserId(
-            userId,
-        );
+        await this.refreshTokenNonceService.deleteByUserId(userId);
         return { message: 'Password has been reset successfully' };
     }
 }

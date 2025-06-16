@@ -16,6 +16,14 @@ import storageConfig from '../../../../src/config/configs/storage.config';
 import appConfig from '../../../../src/config/configs/app.config';
 import assetsConfig from '../../../../src/config/configs/assets.config';
 import unsplashConfig from '../../../../src/config/configs/unsplash.config';
+import { ExternalAccount } from '../../../../src/core/external-accounts/entities/external-account.entity';
+import { ExternalAccountsService } from '../../../../src/core/external-accounts/external-accounts.service';
+
+class MockExternalAccountsService {
+    async findAllByUserId(userId: number): Promise<ExternalAccount[]> {
+        return [];
+    }
+}
 import { ProjectsRepository } from '../../../../src/modules/projects/projects.repository';
 import { ProjectsPaginationRepository } from '../../../../src/modules/projects/projects-pagination.repository';
 import { PollinationsService } from '../../../../src/modules/photos/pollinations.service';
@@ -68,12 +76,14 @@ export class BaseSeederService {
         const hashingService = new HashingService();
         const passwordService = new HashingPasswordsService(hashingService);
         this.usersRepository = new UsersRepository(this.dbService);
+        const mockExternalAccountsService = new MockExternalAccountsService() as ExternalAccountsService;
         this.usersService = new UsersService(
             this.usersRepository,
             passwordService,
             this.fileUploadService,
             this.filesService,
-            this.fileUrlTransformerService
+            this.fileUrlTransformerService,
+            mockExternalAccountsService
         );
 
         // Projects services

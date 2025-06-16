@@ -30,7 +30,7 @@ model User {
   avatarFile         File                @relation("UserAvatarFile", fields: [avatarFileId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   refreshTokenNonces RefreshTokenNonce[] @relation("UserRefreshTokens")
   authoredFiles      File[]              @relation("FileAuthor")
-  // externalAccounts   ExternalAccount[]    @relation("UserExternalAccounts")
+  externalAccounts   ExternalAccount[]   @relation("UserExternalAccounts")
   projects           Project[]           @relation("UserProjects")
   // fonts              Font[]               @relation("UserFonts")
 
@@ -51,22 +51,23 @@ model RefreshTokenNonce {
   @@map("refresh_token_nonces")
 }
 
-// model ExternalAccount {
-//   id         Int      @id @default(autoincrement())
-//   userId     Int      @map("user_id")
-//   provider   ExternalAccountProvider @map("provider")
-//   accountId  String   @map("account_id") @db.VarChar(255)
-//   avatarUrl  String?  @map("avatar_url") @db.VarChar(255)
-//   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamp(0)
-//   updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
-//
-//   user User @relation("UserExternalAccounts", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-//
-//   @@index([userId], map: "fk_external_accounts_user_id")
-//   @@unique([accountId, provider], map: "uq_external_accounts_account_id_provider")
-//   @@index([userId, provider], map: "idx_external_accounts_user_id_provider")
-//   @@map("external_accounts")
-// }
+model ExternalAccount {
+  id           Int                     @id @default(autoincrement())
+  userId       Int                     @map("user_id")
+  provider     ExternalAccountProvider @map("provider")
+  accountId    String                  @map("account_id") @db.VarChar(255)
+  avatarUrl    String?                 @map("avatar_url") @db.VarChar(255)
+  refreshToken String?                 @map("refresh_token") @db.Text
+  createdAt    DateTime                @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt    DateTime                @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  user User @relation("UserExternalAccounts", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([accountId, provider], map: "uq_external_accounts_account_id_provider")
+  @@unique([userId, provider], map: "uq_external_accounts_user_id_provider")
+  @@index([userId], map: "fk_external_accounts_user_id")
+  @@map("external_accounts")
+}
 
 model File {
   id         Int            @id @default(autoincrement())
