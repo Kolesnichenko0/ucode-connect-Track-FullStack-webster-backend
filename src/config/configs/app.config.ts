@@ -28,7 +28,9 @@ const AppSchema = z.object({
     APP_CSRF_COOKIE_SAME_SITE: z
         .enum(['strict', 'lax', 'none'])
         .default('strict'),
-    APP_CSRF_COOKIE_SECURE: z.boolean().default(false),
+    APP_CSRF_COOKIE_SECURE: z
+        .preprocess((val) => val !== 'false', z.boolean())
+        .default(false),
     APP_CSRF_IGNORE_METHODS: z
         .array(z.string())
         .default(['GET', 'HEAD', 'OPTIONS']),

@@ -18,7 +18,7 @@
         "y": 360,
         "width": 1280,
         "height": 720,
-        "src": "http://localhost:8080/assets/images/project/backgrounds/default-business-technology-2.jpg",
+        "src": "/assets/images/project/backgrounds/default-business-technology-2.jpg",
         "brightness": 0,
         "contrast": 0,
         "saturation": 0,

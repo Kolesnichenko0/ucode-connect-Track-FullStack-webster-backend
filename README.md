@@ -39,7 +39,7 @@ In the examples of all commands in the text `<env>` is the name of the environme
    For test purposes use `test` environment: create `.env.test` file by copying the `.env.test.example` file.
 4. Run script for create databases and user:
    ```bash
-   npm run setup:db
+   npm run setup:db:dev
    ```
 5. Run command to apply necessary migrations.
    ```bash
