@@ -7,7 +7,7 @@
     "license": "UNLICENSED",
     "scripts": {
         "start": "cross-env NODE_ENV=development nest start",
-        "start:prod": "cross-env NODE_ENV=production node dist/main",
+        "start:prod": "cross-env NODE_ENV=production node dist/src/main",
         "start:dev": "cross-env NODE_ENV=development nest start --watch",
         "start:debug:dev": "cross-env NODE_ENV=development nest start --debug --watch",
         "setup:db:dev": "cross-env NODE_ENV=development ts-node setup/setupdb.ts",
