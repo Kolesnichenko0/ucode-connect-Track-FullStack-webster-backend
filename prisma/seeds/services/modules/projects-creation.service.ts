@@ -47,8 +47,13 @@ export class ProjectsCreationService {
 
             for (const file of jsonFiles) {
                 const filePath = path.join(templatesDir, file);
-                const content = await fs.readFile(filePath, 'utf-8');
-                this.templateContents.push(JSON.parse(content));
+                const content = JSON.parse((await fs.readFile(filePath, 'utf-8')));
+                const serverUrl = this.baseSeeder.apiConfigService.get("app.serverUrl");
+                content.content.renderableObjects = content.content.renderableObjects.map((obj: any) => ({
+                    ...obj,
+                    src: obj.src ? `${serverUrl}${obj.src}` : obj.src
+                }));
+                this.templateContents.push(content);
             }
 
             console.log(`📋 Loaded ${this.templateContents.length} template contents.`);

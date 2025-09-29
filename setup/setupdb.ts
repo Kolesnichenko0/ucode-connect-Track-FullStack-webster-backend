@@ -14,7 +14,9 @@ if (fs.existsSync(envFile)) {
     dotenvExpand.expand(envConfig);
     console.log(`Loaded configuration from ${envFile}`);
 } else {
-    console.warn(`Environment file ${envFile} not found. Using default environment variables.`);
+    console.warn(
+        `Environment file ${envFile} not found. Using default environment variables.`,
+    );
 }
 
 const rootEnvFile = '.env.database.root';
@@ -24,7 +26,9 @@ if (fs.existsSync(rootEnvFile)) {
     dotenvExpand.expand(rootEnvConfig);
     console.log(`Loaded root configuration from ${rootEnvFile}`);
 } else {
-    console.warn(`Root environment file ${rootEnvFile} not found. Using default environment variables.`);
+    console.warn(
+        `Root environment file ${rootEnvFile} not found. Using default environment variables.`,
+    );
 }
 
 async function createDatabase(
@@ -82,7 +86,7 @@ async function configureMainDatabase(connection: Connection): Promise<string> {
     await grantPrivileges(
         connection,
         shadowDbName,
-        config.database.app.username
+        config.database.app.username,
     );
 
     console.log('Main databases setup completed successfully.');
@@ -133,7 +137,9 @@ async function setupDatabase(): Promise<void> {
 
         const appUsername = await configureMainDatabase(connection);
 
-        await configureTestDatabase(connection, appUsername);
+        if (nodeEnv !== 'production') {
+            await configureTestDatabase(connection, appUsername);
+        }
 
         await connection.query(`FLUSH PRIVILEGES`);
         console.log('All privileges have been flushed successfully.');

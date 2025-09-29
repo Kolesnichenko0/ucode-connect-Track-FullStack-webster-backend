@@ -18,7 +18,7 @@
         "y": 600,
         "width": 1600,
         "height": 1200,
-        "src": "http://localhost:8080/assets/images/project/backgrounds/default-abstract-geometric-pattern-1.jpg",
+        "src": "/assets/images/project/backgrounds/default-abstract-geometric-pattern-1.jpg",
         "brightness": 0,
         "contrast": 0,
         "saturation": 0,
